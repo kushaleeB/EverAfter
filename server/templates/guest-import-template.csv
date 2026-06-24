@@ -1,0 +1,4 @@
+firstName,lastName,email,partySize,category,plusOneAllowed,notes
+Sarah,Chen,sarah.chen@example.com,2,family,true,Vegetarian
+Marcus,Wright,marcus.wright@example.com,1,friends,false,
+Eleanor,Smith,,1,vip,false,Bridal party

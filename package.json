@@ -1,0 +1,29 @@
+{
+  "name": "everafter",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EverAfter — luxury wedding invitation platform (monorepo)",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n client,server -c cyan,magenta \"npm run dev -w @everafter/client\" \"npm run dev -w @everafter/server\"",
+    "dev:client": "npm run dev -w @everafter/client",
+    "dev:server": "npm run dev -w @everafter/server",
+    "build": "npm run build -w @everafter/client",
+    "build:client": "npm run build -w @everafter/client",
+    "start": "npm run start -w @everafter/server",
+    "lint": "npm run lint -w @everafter/client",
+    "db:generate": "npm run db:generate -w @everafter/server",
+    "db:pull": "npm run db:pull -w @everafter/server",
+    "db:studio": "npm run db:studio -w @everafter/server"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
