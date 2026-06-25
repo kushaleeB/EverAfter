@@ -50,7 +50,7 @@ export function LandingHero() {
               className="bg-[#8b734b] px-8 text-[#f5f5f0] hover:bg-[#745a34]"
               asChild
             >
-              <Link to="/register">
+              <Link to="/signup">
                 Create Your Invitation
                 <ArrowRight className="h-4 w-4" strokeWidth={2} />
               </Link>

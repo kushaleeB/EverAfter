@@ -6,8 +6,8 @@ const footerColumns = [
     title: 'Product',
     links: [
       { label: 'Features', to: '/features' },
-      { label: 'Templates', href: '#templates' },
-      { label: 'Pricing', href: '#pricing' },
+      { label: 'Templates', to: '/templates' },
+      { label: 'Pricing', to: '/pricing' },
     ],
   },
   {

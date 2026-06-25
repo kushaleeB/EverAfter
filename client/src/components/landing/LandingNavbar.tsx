@@ -7,10 +7,10 @@ const centerLinks: Array<
   | { label: string; href: string }
 > = [
   { label: 'Features', to: '/features', end: true },
-  { label: 'Templates', href: '#templates' },
-  { label: 'Pricing', href: '#pricing' },
-  { label: 'Resources', href: '#resources' },
-  { label: 'About', href: '#about' },
+  { label: 'Templates', to: '/templates', end: true },
+  { label: 'Pricing', to: '/pricing', end: true },
+  { label: 'Stories', to: '/stories', end: true },
+  { label: 'About', to: '/about', end: true },
 ];
 
 export function LandingNavbar() {
@@ -41,7 +41,7 @@ export function LandingNavbar() {
                   cn(
                     'font-body text-[15px] font-normal transition-colors',
                     isActive
-                      ? 'text-[#4e342e] underline decoration-[#4e342e]/40 underline-offset-4'
+                      ? 'text-[#4e342e] underline decoration-[#4e342e] underline-offset-4'
                       : 'text-[#555555] hover:text-[#4e342e]',
                   )
                 }
@@ -73,7 +73,7 @@ export function LandingNavbar() {
             className="bg-[#4e342e] px-6 hover:bg-[#3e2723]"
             asChild
           >
-            <Link to="/register">Get Started</Link>
+            <Link to="/signup">Get Started</Link>
           </Button>
         </div>
       </div>
