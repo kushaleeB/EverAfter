@@ -1,4 +1,5 @@
 import { Link, NavLink } from 'react-router-dom';
+import { EverAfterLogo } from '@/components/landing/EverAfterLogo';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -18,13 +19,7 @@ export function LandingNavbar() {
     <header className="sticky top-0 z-50 bg-[#faf9f6]">
       <div className="relative mx-auto flex h-[72px] max-w-[1280px] items-center justify-between px-6 md:px-16">
         <Link to="/" className="relative z-10 flex shrink-0 items-center">
-          <img
-            src="/img/logo.png"
-            alt="Ever After"
-            className="h-10 w-auto object-contain md:h-11"
-            width={120}
-            height={44}
-          />
+          <EverAfterLogo showText={false} size="lg" />
         </Link>
 
         <nav

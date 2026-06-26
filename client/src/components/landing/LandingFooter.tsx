@@ -13,9 +13,9 @@ const footerColumns = [
   {
     title: 'Company',
     links: [
-      { label: 'About Us', href: '#about' },
-      { label: 'Contact', href: '#contact' },
-      { label: 'Blog', href: '#blog' },
+      { label: 'Stories', href: '#about' },
+      { label: 'About', href: '#contact' },
+      { label: 'Press', href: '#blog' },
     ],
   },
   {
@@ -32,16 +32,18 @@ export function LandingFooter() {
   const year = new Date().getFullYear();
 
   return (
-    <footer id="about" className="border-t border-outline-variant/30 bg-surface-container-high px-6 py-16 md:px-16">
+    <footer
+      id="about"
+      className="border-t border-outline-variant/30 bg-surface-container-high px-6 py-16 md:px-16"
+    >
       <div className="mx-auto grid max-w-[1280px] gap-12 md:grid-cols-2 lg:grid-cols-4">
         <div className="lg:col-span-1">
-          <EverAfterLogo />
+          <EverAfterLogo showText={false} size="md" />
           <p className="mt-4 max-w-xs font-body text-sm leading-relaxed text-on-surface-variant">
-            Making wedding planning as beautiful as the day itself. Crafted for couples who value
-            understated elegance.
+            Crafting digital experiences as beautiful and timeless as your love story.
           </p>
           <p className="mt-6 font-body text-xs text-on-surface-variant/80">
-            &copy; {year} Ever After. All rights reserved.
+            &copy; {year} EverAfter luxury wedding experiences. All rights reserved.
           </p>
         </div>
 

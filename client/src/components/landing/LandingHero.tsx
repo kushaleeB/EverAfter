@@ -15,7 +15,7 @@ export function LandingHero() {
           className="h-full w-full object-cover object-center"
         />
         <div
-          className="absolute inset-0 bg-gradient-to-b from-white/25 via-white/45 to-[#fcf8f5]/90"
+          className="absolute inset-0 bg-gradient-to-b from-white/25 via-white/45 to-[#f0e6e1]/90"
           aria-hidden
         />
       </div>
@@ -69,7 +69,7 @@ export function LandingHero() {
         </motion.div>
       </div>
 
-      <LandingTrustBar />
+      <LandingTrustBar className="relative z-10 mt-auto border-t border-outline-variant/25 bg-surface-container-high" />
     </section>
   );
 }

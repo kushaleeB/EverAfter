@@ -19,10 +19,10 @@ const mainNav = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard, end: true },
   { label: 'Events', to: '/dashboard/events', icon: Calendar, end: true },
   { label: 'Overview', to: '/dashboard/overview', icon: BarChart3, end: true },
-  { label: 'Invitations', to: '/dashboard/invitations', icon: Mail },
+  { label: 'Invitations', to: '/dashboard/invitations', icon: Mail, end: true },
   { label: 'Guests', to: '/dashboard/guests', icon: Users },
   { label: 'RSVPs', to: '/dashboard/rsvps', icon: CheckSquare },
-  { label: 'Media', to: '/dashboard/media', icon: Image },
+  { label: 'Media', to: '/dashboard/media', icon: Image, end: true },
   { label: 'Settings', to: '/dashboard/settings', icon: Settings },
 ];
 

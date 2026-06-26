@@ -11,6 +11,8 @@ import { DashboardPage } from '@/pages/DashboardPage';
 import { EventsPage } from '@/pages/EventsPage';
 import { CreateEventPage } from '@/pages/CreateEventPage';
 import { OverviewPage } from '@/pages/OverviewPage';
+import { InvitationsPage } from '@/pages/InvitationsPage';
+import { MediaPage } from '@/pages/MediaPage';
 
 export default function App() {
   return (
@@ -29,6 +31,8 @@ export default function App() {
         <Route path="/dashboard/events" element={<EventsPage />} />
         <Route path="/dashboard/events/new" element={<CreateEventPage />} />
         <Route path="/dashboard/overview" element={<OverviewPage />} />
+        <Route path="/dashboard/invitations" element={<InvitationsPage />} />
+        <Route path="/dashboard/media" element={<MediaPage />} />
       </Routes>
     </BrowserRouter>
   );
