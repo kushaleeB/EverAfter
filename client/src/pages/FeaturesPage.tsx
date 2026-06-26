@@ -52,8 +52,8 @@ export function FeaturesPage() {
               </h2>
               <p className="mt-5 font-body text-base leading-relaxed text-[#6d625a] md:text-[17px]">
                 Craft an ethereal first impression. Our builder brings the tactile beauty of
-                letterpress and foil stamping to the digital realm. Fine-tune every typographic detail
-                and layout with absolute creative freedom.
+                letterpress and foil stamping to the digital realm. Fine-tune every typographic
+                detail and layout with absolute creative freedom.
               </p>
               <ul className="mt-8 space-y-5">
                 {studioFeatures.map(({ icon: Icon, label }) => (
@@ -63,7 +63,9 @@ export function FeaturesPage() {
                       strokeWidth={1.5}
                       aria-hidden
                     />
-                    <span className="font-body text-[15px] text-[#3e2723] md:text-base">{label}</span>
+                    <span className="font-body text-[15px] text-[#3e2723] md:text-base">
+                      {label}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -95,9 +97,9 @@ export function FeaturesPage() {
                   Intelligent Guest Lists
                 </h3>
                 <p className="mt-3 font-body text-sm leading-relaxed text-[#6d625a] md:text-[15px]">
-                  Organize your attendees with grace. Group by household, manage plus-ones seamlessly,
-                  and segment lists for auxiliary events like rehearsal dinners and post-wedding
-                  brunches.
+                  Organize your attendees with grace. Group by household, manage plus-ones
+                  seamlessly, and segment lists for auxiliary events like rehearsal dinners and
+                  post-wedding brunches.
                 </p>
                 <div className="mt-8 divide-y divide-[#e8dfd6] border-t border-[#e8dfd6]">
                   <div className="flex items-center justify-between py-4">
@@ -129,8 +131,8 @@ export function FeaturesPage() {
                 </h3>
                 <p className="mt-3 font-body text-sm leading-relaxed text-[#6d625a] md:text-[15px]">
                   Watch the responses gather effortlessly. Collect dietary restrictions, song
-                  requests, and mailing addresses through a beautifully branded, frictionless flow for
-                  your guests.
+                  requests, and mailing addresses through a beautifully branded, frictionless flow
+                  for your guests.
                 </p>
                 <div className="mt-8 flex items-center justify-around rounded-xl bg-[#f0ebe6] px-6 py-8">
                   <div className="text-center">
@@ -166,19 +168,28 @@ export function FeaturesPage() {
                 Insights at a Glance
               </h2>
               <p className="mt-5 font-body text-base leading-relaxed text-[#6d625a] md:text-lg">
-                Make informed decisions with beautifully visualized data, from catering headcounts to
-                accommodation requirements.
+                Make informed decisions with beautifully visualized data, from catering headcounts
+                to accommodation requirements.
               </p>
             </div>
 
             <div className="mx-auto mt-12 max-w-4xl md:mt-14">
-              <div className="overflow-hidden rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
+              <div className="relative overflow-hidden rounded-2xl shadow-[0_20px_60px_rgba(0,0,0,0.08)]">
                 <img
                   src="/img/features/analytics_lap.png"
                   alt="Analytics dashboard on laptop"
                   className="h-auto w-full object-cover"
                   loading="lazy"
                 />
+                <div className="absolute bottom-4 left-4 max-w-[min(100%-2rem,340px)] rounded-2xl bg-[#FFF8F5] p-5 shadow-[0_12px_32px_rgba(31,27,24,0.1)] sm:bottom-6 sm:left-6 sm:p-6 md:bottom-8 md:left-8 md:max-w-[380px]">
+                  <h3 className="font-display text-xl leading-snug text-[#8b734b] md:text-2xl">
+                    Comprehensive Reporting
+                  </h3>
+                  <p className="mt-2 font-body text-sm leading-relaxed text-on-surface md:text-[15px]">
+                    Export detailed manifests for your planner and vendors with a single click,
+                    ensuring every detail is flawlessly executed.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -225,16 +236,28 @@ export function FeaturesPage() {
                     </span>
                     <div className="flex w-24 shrink-0 justify-center sm:w-28 md:w-32">
                       {row.standard ? (
-                        <Check className="h-[1.125rem] w-[1.125rem] text-[#3e2723]" strokeWidth={1.75} />
+                        <Check
+                          className="h-[1.125rem] w-[1.125rem] text-[#3e2723]"
+                          strokeWidth={1.75}
+                        />
                       ) : (
-                        <X className="h-[1.125rem] w-[1.125rem] text-[#3e2723]" strokeWidth={1.75} />
+                        <X
+                          className="h-[1.125rem] w-[1.125rem] text-[#3e2723]"
+                          strokeWidth={1.75}
+                        />
                       )}
                     </div>
                     <div className="relative z-10 flex w-24 shrink-0 justify-center sm:w-28 md:w-32">
                       {row.premium ? (
-                        <Check className="h-[1.125rem] w-[1.125rem] text-[#3e2723]" strokeWidth={1.75} />
+                        <Check
+                          className="h-[1.125rem] w-[1.125rem] text-[#3e2723]"
+                          strokeWidth={1.75}
+                        />
                       ) : (
-                        <X className="h-[1.125rem] w-[1.125rem] text-[#3e2723]" strokeWidth={1.75} />
+                        <X
+                          className="h-[1.125rem] w-[1.125rem] text-[#3e2723]"
+                          strokeWidth={1.75}
+                        />
                       )}
                     </div>
                   </li>
