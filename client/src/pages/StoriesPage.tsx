@@ -1,8 +1,9 @@
 import { ArrowRight, ChevronRight, Heart } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
-import { MarketingFooter } from '@/components/marketing/MarketingFooter';
+import { LandingFooter } from '@/components/landing/LandingFooter';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 const featuredStory = {
   image: '/img/stories/container_img.png',
@@ -26,6 +27,8 @@ const moreStories = [
     quote:
       'Managing our guest list felt effortless. Every RSVP was tracked beautifully, and our families felt truly welcomed from the very first click.',
     linkLabel: 'Seamless Guest Management',
+    imageAspect: 'aspect-[4/5]',
+    imagePosition: 'object-cover object-[72%_center]',
   },
   {
     id: 'loire',
@@ -35,6 +38,8 @@ const moreStories = [
     quote:
       'Planning a destination wedding from abroad was daunting — until we found EverAfter. Our guests had everything they needed in one elegant place.',
     linkLabel: 'Destination Planning Tool',
+    imageAspect: 'aspect-[4/5]',
+    imagePosition: 'object-cover object-center',
   },
   {
     id: 'bigsur',
@@ -44,6 +49,8 @@ const moreStories = [
     quote:
       'The templates captured the raw beauty of our coastal ceremony perfectly. It felt bespoke, not templated — exactly what we envisioned.',
     linkLabel: 'Custom Domain & Design',
+    imageAspect: 'aspect-[16/10]',
+    imagePosition: 'object-cover object-center',
   },
 ];
 
@@ -125,11 +132,14 @@ export function StoriesPage() {
                 key={story.id}
                 className="overflow-hidden rounded-2xl bg-white shadow-[0_8px_40px_rgba(0,0,0,0.06)]"
               >
-                <div className="aspect-[16/10] overflow-hidden">
+                <div className={cn('overflow-hidden', story.imageAspect)}>
                   <img
                     src={story.image}
                     alt={`${story.names} — ${story.location}`}
-                    className="h-full w-full object-cover transition-transform duration-500 hover:scale-[1.02]"
+                    className={cn(
+                      'h-full w-full transition-transform duration-500 hover:scale-[1.02]',
+                      story.imagePosition,
+                    )}
                   />
                 </div>
                 <div className="p-6 md:p-8">
@@ -169,7 +179,7 @@ export function StoriesPage() {
         </section>
       </main>
 
-      <MarketingFooter activeCompany="stories" />
+      <LandingFooter />
     </div>
   );
 }

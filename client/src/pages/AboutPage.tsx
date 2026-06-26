@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
 import { Diamond, Eye, Heart } from 'lucide-react';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
-import { MarketingFooter } from '@/components/marketing/MarketingFooter';
+import { LandingFooter } from '@/components/landing/LandingFooter';
 import { cn } from '@/lib/utils';
 
 const fadeUp = {
@@ -247,7 +247,7 @@ export function AboutPage() {
         </section>
       </main>
 
-      <MarketingFooter activeCompany="about" />
+      <LandingFooter />
     </div>
   );
 }

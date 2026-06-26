@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, Search, SlidersHorizontal } from 'lucide-react';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
-import { MarketingFooter } from '@/components/marketing/MarketingFooter';
+import { LandingFooter } from '@/components/landing/LandingFooter';
 import { cn } from '@/lib/utils';
 
 const categories = [
@@ -160,7 +160,7 @@ export function TemplatesPage() {
         </section>
       </main>
 
-      <MarketingFooter activeProduct="templates" />
+      <LandingFooter />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
-import { MarketingFooter } from '@/components/marketing/MarketingFooter';
+import { LandingFooter } from '@/components/landing/LandingFooter';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
@@ -177,7 +177,7 @@ export function PricingPage() {
         </section>
       </main>
 
-      <MarketingFooter activeProduct="pricing" />
+      <LandingFooter />
     </div>
   );
 }
