@@ -10,6 +10,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
+  googleAuthSchema,
 } from '../../../validators/auth.validator.js';
 import * as authController from '../../../controllers/auth.controller.js';
 
@@ -18,6 +19,7 @@ const router = Router();
 // Public auth endpoints
 router.post('/register', authRateLimiter, validate(registerSchema), asyncHandler(authController.register));
 router.post('/login', authRateLimiter, validate(loginSchema), asyncHandler(authController.login));
+router.post('/google', authRateLimiter, validate(googleAuthSchema), asyncHandler(authController.googleLogin));
 router.post('/refresh', authRateLimiter, validate(refreshTokenSchema), asyncHandler(authController.refresh));
 router.post('/logout', validate(refreshTokenSchema), asyncHandler(authController.logout));
 router.post('/forgot-password', authRateLimiter, validate(forgotPasswordSchema), asyncHandler(authController.forgotPassword));

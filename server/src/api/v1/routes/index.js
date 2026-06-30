@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { asyncHandler } from '../../../utils/asyncHandler.js';
+import * as configController from '../../../controllers/config.controller.js';
 import * as healthController from '../../../controllers/health.controller.js';
 import authRoutes from './auth.routes.js';
 import eventsRoutes from './events.routes.js';
@@ -8,13 +9,16 @@ import guestsRoutes from './guests.routes.js';
 import mediaRoutes from './media.routes.js';
 import rsvpRoutes from './rsvp.routes.js';
 import publicRoutes from './public.routes.js';
+import dashboardRoutes from './dashboard.routes.js';
 
 const router = Router();
 
 router.get('/health', asyncHandler(healthController.health));
 router.get('/health/db', asyncHandler(healthController.healthDb));
+router.get('/config', asyncHandler(configController.getPublicConfig));
 
 router.use('/auth', authRoutes);
+router.use('/dashboard', dashboardRoutes);
 router.use('/events', eventsRoutes);
 router.use('/events/:eventId/invitations', invitationsRoutes);
 router.use('/events/:eventId/guests', guestsRoutes);

@@ -19,6 +19,7 @@ const envSchema = z.object({
   PASSWORD_RESET_EXPIRES_HOURS: z.coerce.number().default(1),
   APP_URL: z.string().url().default('http://localhost:5173'),
   CORS_ORIGIN: z.string().default('http://localhost:5173'),
+  GOOGLE_CLIENT_ID: z.string().optional(),
   UPLOAD_DIR: z.string().default('uploads'),
   MAX_FILE_SIZE_MB: z.coerce.number().default(10),
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900_000),

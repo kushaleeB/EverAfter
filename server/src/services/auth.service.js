@@ -12,6 +12,7 @@ import { AppError } from '../errors/AppError.js';
 import { sanitizeUser } from '../utils/response.js';
 
 const SALT_ROUNDS = 12;
+const GOOGLE_USERINFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo';
 
 export class AuthService {
   async register({ email, password, firstName, lastName }) {
@@ -53,6 +54,64 @@ export class AuthService {
       where: { id: user.id },
       data: { lastLoginAt: new Date() },
     });
+
+    const tokens = await this._issueTokens(user, meta);
+    return { user: sanitizeUser(user), ...tokens };
+  }
+
+  async loginWithGoogle({ accessToken }, meta = {}) {
+    if (!env.GOOGLE_CLIENT_ID) {
+      throw AppError.badRequest('Google sign-in is not configured');
+    }
+
+    const profile = await this._fetchGoogleProfile(accessToken);
+    if (!profile?.sub || !profile.email) {
+      throw AppError.unauthorized('Unable to verify Google account');
+    }
+
+    const email = profile.email.toLowerCase();
+    const firstName = profile.given_name?.trim() || profile.name?.split(' ')[0] || 'Guest';
+    const lastName =
+      profile.family_name?.trim() ||
+      profile.name?.split(' ').slice(1).join(' ') ||
+      'User';
+    const avatarUrl = profile.picture ?? null;
+
+    let user = await prisma.user.findFirst({
+      where: {
+        deletedAt: null,
+        OR: [{ googleId: profile.sub }, { email }],
+      },
+    });
+
+    if (user) {
+      user = await prisma.user.update({
+        where: { id: user.id },
+        data: {
+          googleId: user.googleId ?? profile.sub,
+          avatarUrl: user.avatarUrl ?? avatarUrl,
+          emailVerifiedAt: user.emailVerifiedAt ?? new Date(),
+          lastLoginAt: new Date(),
+          firstName: user.firstName || firstName,
+          lastName: user.lastName || lastName,
+        },
+      });
+    } else {
+      const passwordHash = await bcrypt.hash(generateSecureToken(), SALT_ROUNDS);
+      user = await prisma.user.create({
+        data: {
+          email,
+          passwordHash,
+          googleId: profile.sub,
+          firstName,
+          lastName,
+          avatarUrl,
+          emailVerifiedAt: profile.email_verified ? new Date() : null,
+          lastLoginAt: new Date(),
+        },
+      });
+      await this._assignDefaultSubscription(user.id);
+    }
 
     const tokens = await this._issueTokens(user, meta);
     return { user: sanitizeUser(user), ...tokens };
@@ -224,6 +283,18 @@ export class AuthService {
       tokenType: 'Bearer',
       expiresIn: env.JWT_ACCESS_EXPIRES_IN,
     };
+  }
+
+  async _fetchGoogleProfile(accessToken) {
+    const response = await fetch(GOOGLE_USERINFO_URL, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
+
+    if (!response.ok) {
+      throw AppError.unauthorized('Invalid Google access token');
+    }
+
+    return response.json();
   }
 
   async _assignDefaultSubscription(userId) {

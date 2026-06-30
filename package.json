@@ -21,7 +21,8 @@
     "lint": "npm run lint -w @everafter/client",
     "db:generate": "npm run db:generate -w @everafter/server",
     "db:pull": "npm run db:pull -w @everafter/server",
-    "db:studio": "npm run db:studio -w @everafter/server"
+    "db:studio": "npm run db:studio -w @everafter/server",
+    "db:seed": "npm run db:seed -w @everafter/server"
   },
   "devDependencies": {
     "concurrently": "^9.1.2"

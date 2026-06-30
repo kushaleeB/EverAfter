@@ -1,21 +1,23 @@
 import { useState } from 'react';
 import { ArrowLeft, ChevronDown } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { createEvent } from '@/api/events';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ApiError } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 const timezones = [
-  'Select Timezone',
-  'America/New_York (EST)',
-  'America/Chicago (CST)',
-  'America/Denver (MST)',
-  'America/Los_Angeles (PST)',
-  'Europe/London (GMT)',
-  'Europe/Paris (CET)',
-  'Europe/Rome (CET)',
-  'Asia/Tokyo (JST)',
-  'Australia/Sydney (AEDT)',
+  { label: 'Select Timezone', value: '' },
+  { label: 'America/New_York (EST)', value: 'America/New_York' },
+  { label: 'America/Chicago (CST)', value: 'America/Chicago' },
+  { label: 'America/Denver (MST)', value: 'America/Denver' },
+  { label: 'America/Los_Angeles (PST)', value: 'America/Los_Angeles' },
+  { label: 'Europe/London (GMT)', value: 'Europe/London' },
+  { label: 'Europe/Paris (CET)', value: 'Europe/Paris' },
+  { label: 'Europe/Rome (CET)', value: 'Europe/Rome' },
+  { label: 'Asia/Tokyo (JST)', value: 'Asia/Tokyo' },
+  { label: 'Australia/Sydney (AEDT)', value: 'Australia/Sydney' },
 ];
 
 function SectionDivider({ title }: { title: string }) {
@@ -39,7 +41,22 @@ function FieldLabel({ htmlFor, children }: { htmlFor: string; children: string }
   );
 }
 
+function buildEventTitle(partnerOne: string, partnerTwo: string, eventTitle: string) {
+  const customTitle = eventTitle.trim();
+  if (customTitle) return customTitle;
+
+  const one = partnerOne.trim();
+  const two = partnerTwo.trim();
+
+  if (one && two) return `${one} & ${two}`;
+  if (one) return `${one}'s Event`;
+  if (two) return `${two}'s Event`;
+
+  return '';
+}
+
 export function CreateEventPage() {
+  const navigate = useNavigate();
   const [partnerOne, setPartnerOne] = useState('');
   const [partnerTwo, setPartnerTwo] = useState('');
   const [eventTitle, setEventTitle] = useState('');
@@ -47,21 +64,55 @@ export function CreateEventPage() {
   const [timezone, setTimezone] = useState('');
   const [venueName, setVenueName] = useState('');
   const [venueAddress, setVenueAddress] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  async function submitEvent() {
+    setError('');
+
+    const title = buildEventTitle(partnerOne, partnerTwo, eventTitle);
+    if (!title) {
+      setError('Add an event title or both partner names.');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const event = await createEvent({
+        title,
+        partnerOne: partnerOne.trim() || undefined,
+        partnerTwo: partnerTwo.trim() || undefined,
+        eventDate: eventDate || undefined,
+        eventTimezone: timezone || 'UTC',
+        venueName: venueName.trim() || undefined,
+        venueAddress: venueAddress.trim() || undefined,
+      });
+
+      localStorage.setItem('everafter_selected_event_id', event.id);
+      navigate('/dashboard/events', { replace: true });
+    } catch (err) {
+      setError(
+        err instanceof ApiError
+          ? err.message
+          : 'Failed to create event. Please try again.',
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // TODO: Connect to POST /api/v1/events when backend integration is restored
-    console.log('Event creation will be implemented later.');
+    void submitEvent();
   }
 
   function handleSaveDraft() {
-    // TODO: Connect to draft save endpoint when backend integration is restored
-    console.log('Save as draft will be implemented later.');
+    void submitEvent();
   }
 
   return (
     <div className="min-h-screen bg-[#faf9f6]">
-      {/* Top bar */}
       <header className="border-b border-[#e8dfd6] bg-white">
         <div className="relative mx-auto flex h-14 max-w-5xl items-center justify-center px-6">
           <Link
@@ -78,7 +129,6 @@ export function CreateEventPage() {
       </header>
 
       <div className="mx-auto max-w-3xl px-6 py-10 md:py-14">
-        {/* Page title */}
         <div className="text-center">
           <h1 className="font-display text-4xl text-[#4e342e] md:text-5xl">New Event</h1>
           <p className="mx-auto mt-4 max-w-lg font-body text-sm leading-relaxed text-[#6d625a] md:text-base">
@@ -87,7 +137,15 @@ export function CreateEventPage() {
           </p>
         </div>
 
-        {/* Form card */}
+        {error && (
+          <p
+            className="mx-auto mt-6 max-w-3xl rounded-lg bg-red-50 px-4 py-3 text-center font-body text-sm text-red-700"
+            role="alert"
+          >
+            {error}
+          </p>
+        )}
+
         <form
           onSubmit={handleSubmit}
           className="mt-10 rounded-2xl bg-white px-6 py-8 shadow-[0_4px_24px_rgba(0,0,0,0.06)] md:px-10 md:py-10"
@@ -135,8 +193,7 @@ export function CreateEventPage() {
               <FieldLabel htmlFor="eventDate">Select Date</FieldLabel>
               <Input
                 id="eventDate"
-                type="text"
-                placeholder="MM/DD/YYYY"
+                type="date"
                 value={eventDate}
                 onChange={(e) => setEventDate(e.target.value)}
                 className="mt-2 bg-white"
@@ -155,8 +212,8 @@ export function CreateEventPage() {
                   )}
                 >
                   {timezones.map((tz) => (
-                    <option key={tz} value={tz === 'Select Timezone' ? '' : tz} disabled={tz === 'Select Timezone'}>
-                      {tz}
+                    <option key={tz.label} value={tz.value} disabled={!tz.value && tz.label === 'Select Timezone'}>
+                      {tz.label}
                     </option>
                   ))}
                 </select>
@@ -197,16 +254,18 @@ export function CreateEventPage() {
             <Button
               type="button"
               variant="ghost"
+              disabled={isLoading}
               onClick={handleSaveDraft}
               className="h-11 rounded-lg border border-[#c5a67c] bg-white px-6 font-body text-sm font-medium text-[#c5a67c] hover:bg-[#faf7f2]"
             >
-              Save as Draft
+              {isLoading ? 'Saving...' : 'Save as Draft'}
             </Button>
             <Button
               type="submit"
+              disabled={isLoading}
               className="h-11 rounded-lg bg-[#c5a67c] px-8 font-body text-sm font-medium text-white hover:bg-[#b8956a]"
             >
-              Create Event
+              {isLoading ? 'Creating...' : 'Create Event'}
             </Button>
           </div>
         </form>

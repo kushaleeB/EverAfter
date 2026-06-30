@@ -15,6 +15,15 @@ export const login = async (req, res) => {
   sendSuccess(res, result);
 };
 
+export const googleLogin = async (req, res) => {
+  const meta = {
+    userAgent: req.headers['user-agent'],
+    ipAddress: req.ip,
+  };
+  const result = await authService.loginWithGoogle(req.body, meta);
+  sendSuccess(res, result);
+};
+
 export const refresh = async (req, res) => {
   const result = await authService.refresh(req.body.refreshToken);
   sendSuccess(res, result);

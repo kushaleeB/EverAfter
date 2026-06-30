@@ -1,43 +1,52 @@
 import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import { loginUser, logoutUser } from '@/api/auth';
 import { AuthSplitLayout } from '@/components/auth/AuthSplitLayout';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { authFieldErrorsToMessage, mapAuthError } from '@/lib/authErrors';
+import { getRefreshToken } from '@/lib/auth';
+import { useAuthStore } from '@/stores/authStore';
+import { formatDisplayName } from '@/lib/dates';
 
 const AUTH_ERROR_MESSAGE = 'Enter the right credentials.';
-
-function GoogleIcon() {
-  return (
-    <svg viewBox="0 0 24 24" className="h-5 w-5" aria-hidden>
-      <path
-        fill="#4285F4"
-        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-      />
-      <path
-        fill="#34A853"
-        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-      />
-      <path
-        fill="#FBBC05"
-        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
-      />
-      <path
-        fill="#EA4335"
-        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-      />
-    </svg>
-  );
-}
+const DEMO_EMAIL = 'demo@everafter.app';
+const DEMO_PASSWORD = 'Demo1234!';
 
 export function LoginPage() {
+  const navigate = useNavigate();
+  const user = useAuthStore((state) => state.user);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const setSession = useAuthStore((state) => state.setSession);
+  const clearSession = useAuthStore((state) => state.clearSession);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
-  function handleSubmit(e: React.FormEvent) {
+  async function handleSignOut() {
+    setError('');
+    setIsSigningOut(true);
+
+    try {
+      const refreshToken = getRefreshToken();
+      if (refreshToken) {
+        await logoutUser(refreshToken);
+      }
+    } catch {
+      // Clear local session even if the API call fails.
+    } finally {
+      clearSession();
+      setIsSigningOut(false);
+    }
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError('');
 
@@ -46,8 +55,25 @@ export function LoginPage() {
       return;
     }
 
-    // TODO: Restore backend integration — call loginUser(), saveAuthSession(), redirect to /dashboard
-    console.log('Authentication integration will be implemented later.');
+    try {
+      setIsLoading(true);
+      const session = await loginUser({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      setSession(session);
+      navigate('/dashboard', { replace: true });
+    } catch (err) {
+      setError(authFieldErrorsToMessage(mapAuthError(err)));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  function fillDemoCredentials() {
+    setEmail(DEMO_EMAIL);
+    setPassword(DEMO_PASSWORD);
+    setError('');
   }
 
   return (
@@ -61,6 +87,54 @@ export function LoginPage() {
         <p className="mt-2 font-body text-sm text-[#6d625a]">
           Sign in to continue planning your special day.
         </p>
+
+        {isAuthenticated && user && (
+          <div className="mt-5 rounded-lg border border-[#e8dfd6] bg-[#faf7f2] px-4 py-3">
+            <p className="font-body text-sm text-[#4e342e]">
+              Signed in as{' '}
+              <span className="font-medium">
+                {formatDisplayName(user.firstName, user.lastName)}
+              </span>{' '}
+              ({user.email}).
+            </p>
+            <div className="mt-3 flex flex-wrap gap-3">
+              <Button
+                type="button"
+                className="h-9 rounded-lg bg-[#c5a67c] px-4 text-white hover:bg-[#b8956a]"
+                onClick={() => navigate('/dashboard', { replace: true })}
+              >
+                Go to Dashboard
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                disabled={isSigningOut}
+                className="h-9 rounded-lg border border-[#e8dfd6] px-4 text-[#4e342e]"
+                onClick={() => void handleSignOut()}
+              >
+                {isSigningOut ? 'Signing Out...' : 'Sign Out'}
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {import.meta.env.DEV && (
+          <div className="mt-5 rounded-lg border border-dashed border-[#d9cfc6] bg-[#fffaf7] px-4 py-3">
+            <p className="font-body text-xs font-semibold uppercase tracking-[0.1em] text-[#9e8e82]">
+              Demo account
+            </p>
+            <p className="mt-2 font-body text-sm text-[#6d625a]">
+              {DEMO_EMAIL} / {DEMO_PASSWORD}
+            </p>
+            <button
+              type="button"
+              onClick={fillDemoCredentials}
+              className="mt-2 font-body text-sm font-medium text-[#c5a67c] hover:underline"
+            >
+              Use demo credentials
+            </button>
+          </div>
+        )}
 
         {error && (
           <p
@@ -137,9 +211,10 @@ export function LoginPage() {
 
           <Button
             type="submit"
+            disabled={isLoading}
             className="h-12 w-full rounded-xl bg-[#c5a67c] text-white hover:bg-[#b8956a]"
           >
-            Sign In
+            {isLoading ? 'Signing In...' : 'Sign In'}
           </Button>
         </form>
 
@@ -149,13 +224,7 @@ export function LoginPage() {
           <div className="h-px flex-1 bg-[#e8dfd6]" />
         </div>
 
-        <button
-          type="button"
-          className="flex h-12 w-full items-center justify-center gap-3 rounded-xl border border-[#e8dfd6] bg-white font-body text-sm font-medium text-[#1f1b18] transition-colors hover:bg-[#faf7f2]"
-        >
-          <GoogleIcon />
-          Continue with Google
-        </button>
+        <GoogleSignInButton disabled={isLoading} onError={setError} />
 
         <p className="mt-8 text-center font-body text-sm text-[#6d625a]">
           Don&apos;t have an account?{' '}

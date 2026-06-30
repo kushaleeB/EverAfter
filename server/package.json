@@ -9,7 +9,11 @@
     "start": "node src/server.js",
     "db:generate": "prisma generate",
     "db:pull": "prisma db pull",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "db:seed": "node prisma/seed.js"
+  },
+  "prisma": {
+    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@prisma/client": "^6.3.0",

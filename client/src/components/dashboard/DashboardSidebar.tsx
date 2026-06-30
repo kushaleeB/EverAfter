@@ -1,4 +1,4 @@
-import { Link, NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
 import {
   BarChart3,
   Calendar,
@@ -14,6 +14,9 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
+import { logoutUser } from '@/api/auth';
+import { getRefreshToken } from '@/lib/auth';
+import { useAuthStore } from '@/stores/authStore';
 
 const mainNav = [
   { label: 'Dashboard', to: '/dashboard', icon: LayoutDashboard, end: true },
@@ -27,6 +30,22 @@ const mainNav = [
 ];
 
 export function DashboardSidebar() {
+  const navigate = useNavigate();
+  const clearSession = useAuthStore((state) => state.clearSession);
+
+  async function handleLogout() {
+    const refreshToken = getRefreshToken();
+    if (refreshToken) {
+      try {
+        await logoutUser(refreshToken);
+      } catch {
+        // Clear local session even if the API call fails.
+      }
+    }
+    clearSession();
+    navigate('/login', { replace: true });
+  }
+
   return (
     <aside className="flex w-[240px] shrink-0 flex-col border-r border-[#e8dfd6] bg-white px-4 py-6">
       <Link to="/dashboard" className="px-3">
@@ -74,13 +93,14 @@ export function DashboardSidebar() {
           <HelpCircle className="h-4 w-4" strokeWidth={1.5} />
           Help
         </a>
-        <Link
-          to="/login"
-          className="flex items-center gap-3 rounded-lg px-3 py-2.5 font-body text-sm text-[#6d625a] transition-colors hover:bg-[#faf9f6] hover:text-[#4e342e]"
+        <button
+          type="button"
+          onClick={() => void handleLogout()}
+          className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 font-body text-sm text-[#6d625a] transition-colors hover:bg-[#faf9f6] hover:text-[#4e342e]"
         >
           <LogOut className="h-4 w-4" strokeWidth={1.5} />
           Logout
-        </Link>
+        </button>
       </div>
     </aside>
   );

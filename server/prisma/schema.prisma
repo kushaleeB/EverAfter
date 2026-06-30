@@ -106,6 +106,7 @@ model User {
   id              String    @id @default(dbgenerated("gen_random_uuid()")) @db.Uuid
   email           String    @db.Citext
   passwordHash    String    @map("password_hash") @db.VarChar(255)
+  googleId        String?   @unique @map("google_id") @db.VarChar(255)
   firstName       String    @map("first_name") @db.VarChar(100)
   lastName        String    @map("last_name") @db.VarChar(100)
   avatarUrl       String?   @map("avatar_url")
