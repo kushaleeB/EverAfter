@@ -20,3 +20,22 @@ export function serializeInvitation(invitation) {
 
   return serialized;
 }
+
+/**
+ * Serialize Prisma media asset records for JSON responses (BigInt → number).
+ */
+export function serializeMediaAsset(asset) {
+  if (!asset) return asset;
+
+  if (Array.isArray(asset)) {
+    return asset.map(serializeMediaAsset);
+  }
+
+  const serialized = { ...asset };
+
+  if (typeof serialized.fileSizeBytes === 'bigint') {
+    serialized.fileSizeBytes = Number(serialized.fileSizeBytes);
+  }
+
+  return serialized;
+}

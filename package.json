@@ -12,7 +12,7 @@
     "npm": ">=10.0.0"
   },
   "scripts": {
-    "dev": "concurrently -n client,server -c cyan,magenta \"npm run dev -w @everafter/client\" \"npm run dev -w @everafter/server\"",
+    "dev": "node scripts/free-ports.mjs && concurrently -n client,server -c cyan,magenta \"npm run dev -w @everafter/client\" \"npm run dev -w @everafter/server\"",
     "dev:client": "npm run dev -w @everafter/client",
     "dev:server": "npm run dev -w @everafter/server",
     "build": "npm run build -w @everafter/client",

@@ -1,9 +1,18 @@
 import mediaService from '../services/media.service.js';
 import { sendSuccess, sendCreated, sendNoContent } from '../utils/response.js';
 
+function toMediaAssetResponse(asset) {
+  return {
+    id: asset.id,
+    fileUrl: asset.fileUrl,
+    fileName: asset.fileName,
+    mimeType: asset.mimeType,
+  };
+}
+
 export const list = async (req, res) => {
   const assets = await mediaService.listByEvent(req.params.eventId);
-  sendSuccess(res, assets);
+  sendSuccess(res, assets.map(toMediaAssetResponse));
 };
 
 export const upload = async (req, res) => {
@@ -16,7 +25,7 @@ export const upload = async (req, res) => {
     req.file,
     req.body.invitationId,
   );
-  sendCreated(res, asset);
+  sendCreated(res, toMediaAssetResponse(asset));
 };
 
 export const remove = async (req, res) => {

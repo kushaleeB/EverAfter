@@ -136,3 +136,102 @@ export interface CategoryOption {
   value: GuestCategory;
   label: string;
 }
+
+export type InvitationStatus = 'draft' | 'published' | 'archived';
+
+export type SectionType =
+  | 'hero'
+  | 'story'
+  | 'schedule'
+  | 'gallery'
+  | 'rsvp'
+  | 'registry'
+  | 'custom';
+
+export interface InvitationTemplate {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string | null;
+  previewImageUrl: string;
+  isPremium: boolean;
+}
+
+export interface InvitationSection {
+  id: string;
+  invitationId: string;
+  sectionType: SectionType;
+  sortOrder: number;
+  content: Record<string, unknown>;
+  isVisible: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface InvitationEventSnippet {
+  id: string;
+  title: string;
+  partnerOne: string | null;
+  partnerTwo: string | null;
+  eventDate: string | null;
+  venueName?: string | null;
+  venueAddress?: string | null;
+  coverImageUrl?: string | null;
+}
+
+export interface Invitation {
+  id: string;
+  eventId: string;
+  templateId: string | null;
+  slug: string;
+  status: InvitationStatus;
+  headline: string | null;
+  subheadline: string | null;
+  bodyContent: string | null;
+  themeConfig: Record<string, unknown>;
+  rsvpDeadline: string | null;
+  passwordProtected: boolean;
+  publishedAt: string | null;
+  viewCount: string;
+  createdAt: string;
+  updatedAt: string;
+  template?: InvitationTemplate | null;
+  sections?: InvitationSection[];
+  event?: InvitationEventSnippet;
+  _count?: {
+    sections: number;
+    rsvps: number;
+  };
+}
+
+export interface CreateInvitationPayload {
+  templateId?: string;
+  slug: string;
+  headline?: string;
+  subheadline?: string;
+  bodyContent?: string;
+  themeConfig?: Record<string, unknown>;
+  sections?: Array<{
+    sectionType: SectionType;
+    sortOrder?: number;
+    content?: Record<string, unknown>;
+    isVisible?: boolean;
+  }>;
+}
+
+export interface UpdateInvitationPayload {
+  slug?: string;
+  headline?: string;
+  subheadline?: string;
+  bodyContent?: string;
+  themeConfig?: Record<string, unknown>;
+  status?: InvitationStatus;
+  rsvpDeadline?: string | null;
+}
+
+export interface UpdateSectionPayload {
+  sectionType?: SectionType;
+  sortOrder?: number;
+  content?: Record<string, unknown>;
+  isVisible?: boolean;
+}

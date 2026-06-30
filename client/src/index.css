@@ -37,3 +37,274 @@
     @apply m-0 bg-surface font-body text-on-surface antialiased;
   }
 }
+
+@keyframes heroFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.hero-fade-in {
+  animation: heroFadeIn 0.7s ease-out;
+}
+
+@keyframes storyFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes storySlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.story-fade-in {
+  animation: storyFadeIn 0.7s ease-out;
+}
+
+.story-slide-up {
+  animation: storySlideUp 0.7s ease-out;
+}
+
+.schedule-fade-in {
+  animation: storyFadeIn 0.7s ease-out;
+}
+
+.schedule-slide-up {
+  animation: storySlideUp 0.7s ease-out;
+}
+
+.schedule-timeline-reveal .schedule-reveal-item {
+  animation: storySlideUp 0.6s ease-out both;
+}
+
+.schedule-timeline-reveal .schedule-reveal-item:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.schedule-timeline-reveal .schedule-reveal-item:nth-child(2) {
+  animation-delay: 0.12s;
+}
+
+.schedule-timeline-reveal .schedule-reveal-item:nth-child(3) {
+  animation-delay: 0.19s;
+}
+
+.schedule-timeline-reveal .schedule-reveal-item:nth-child(4) {
+  animation-delay: 0.26s;
+}
+
+.schedule-timeline-reveal .schedule-reveal-item:nth-child(5) {
+  animation-delay: 0.33s;
+}
+
+.schedule-timeline-reveal .schedule-reveal-item:nth-child(n + 6) {
+  animation-delay: 0.4s;
+}
+
+.schedule-scale {
+  animation: galleryScaleUp 0.7s ease-out;
+}
+
+.schedule-skeleton {
+  animation: scheduleSkeletonPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes scheduleSkeletonPulse {
+  0%,
+  100% {
+    opacity: 0.55;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.gallery-fade-in {
+  animation: storyFadeIn 0.7s ease-out;
+}
+
+.gallery-scale-up {
+  animation: galleryScaleUp 0.7s ease-out;
+}
+
+.gallery-slide-up {
+  animation: storySlideUp 0.7s ease-out;
+}
+
+@keyframes galleryScaleUp {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.gallery-hover-zoom:hover img {
+  transform: scale(1.05);
+}
+
+.gallery-hover-zoom img {
+  transition: transform 0.35s ease;
+}
+
+.gallery-hover-lift:hover {
+  transform: translateY(-4px);
+}
+
+.gallery-hover-lift {
+  transition: transform 0.35s ease;
+}
+
+.gallery-hover-fade:hover {
+  opacity: 0.88;
+}
+
+.gallery-hover-fade {
+  transition: opacity 0.35s ease;
+}
+
+.gallery-hover-glow:hover {
+  box-shadow: 0 0 24px rgba(197, 166, 124, 0.45);
+}
+
+.gallery-hover-glow {
+  transition: box-shadow 0.35s ease;
+}
+
+.gallery-hover-blur:hover img {
+  filter: blur(1px) brightness(1.05);
+}
+
+.gallery-hover-blur img {
+  transition: filter 0.35s ease;
+}
+
+.gallery-stagger > * {
+  animation: galleryStaggerIn 0.6s ease-out both;
+}
+
+.gallery-stagger > *:nth-child(1) { animation-delay: 0.05s; }
+.gallery-stagger > *:nth-child(2) { animation-delay: 0.1s; }
+.gallery-stagger > *:nth-child(3) { animation-delay: 0.15s; }
+.gallery-stagger > *:nth-child(4) { animation-delay: 0.2s; }
+.gallery-stagger > *:nth-child(5) { animation-delay: 0.25s; }
+.gallery-stagger > *:nth-child(n + 6) { animation-delay: 0.3s; }
+
+@keyframes galleryStaggerIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gallery-reveal {
+  animation: galleryReveal 0.9s ease-out;
+}
+
+@keyframes galleryReveal {
+  from {
+    opacity: 0;
+    clip-path: inset(0 0 100% 0);
+  }
+  to {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+.gallery-skeleton {
+  aspect-ratio: 1;
+  background: linear-gradient(90deg, #f0ebe4 25%, #faf7f2 50%, #f0ebe4 75%);
+  background-size: 200% 100%;
+  animation: gallerySkeleton 1.4s ease-in-out infinite;
+}
+
+@keyframes gallerySkeleton {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.rsvp-fade-in {
+  animation: storyFadeIn 0.7s ease-out;
+}
+
+.rsvp-success-reveal {
+  animation: rsvpSuccessReveal 0.8s ease-out;
+}
+
+.rsvp-success-icon {
+  animation: rsvpSuccessIcon 0.6s ease-out 0.2s both;
+}
+
+@keyframes rsvpSuccessReveal {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes rsvpSuccessIcon {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.rsvp-btn-lift:hover {
+  transform: translateY(-2px);
+}
+
+.rsvp-btn-lift {
+  transition: transform 0.3s ease;
+}
+
+.rsvp-btn-glow:hover {
+  box-shadow: 0 0 20px rgba(197, 166, 124, 0.5);
+}
+
+.rsvp-btn-glow {
+  transition: box-shadow 0.3s ease;
+}
+
+.rsvp-btn-scale:hover {
+  transform: scale(1.02);
+}
+
+.rsvp-btn-scale {
+  transition: transform 0.3s ease;
+}
+
+.rsvp-skeleton {
+  background: linear-gradient(90deg, #f0ebe4 25%, #faf7f2 50%, #f0ebe4 75%);
+  background-size: 200% 100%;
+  animation: gallerySkeleton 1.4s ease-in-out infinite;
+}

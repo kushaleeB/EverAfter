@@ -1,6 +1,26 @@
+function toJsonSafe(value) {
+  if (typeof value === 'bigint') {
+    return Number(value);
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(toJsonSafe);
+  }
+
+  if (value !== null && typeof value === 'object') {
+    if (value instanceof Date) {
+      return value;
+    }
+
+    return Object.fromEntries(Object.entries(value).map(([key, entry]) => [key, toJsonSafe(entry)]));
+  }
+
+  return value;
+}
+
 export function sendSuccess(res, data, statusCode = 200, meta = undefined) {
-  const body = { success: true, data };
-  if (meta) body.meta = meta;
+  const body = { success: true, data: toJsonSafe(data) };
+  if (meta) body.meta = toJsonSafe(meta);
   return res.status(statusCode).json(body);
 }
 

@@ -8,7 +8,7 @@ import {
   Upload,
   Users,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { DashboardLayout } from '@/app/layouts/DashboardLayout';
 import { DashboardMessage } from '@/components/dashboard/DashboardMessage';
 import { EventSelector } from '@/components/dashboard/EventSelector';
@@ -66,12 +66,13 @@ function RsvpBadge({ status }: { status: RsvpStatus }) {
 }
 
 export function GuestsPage() {
+  const [searchParams] = useSearchParams();
   const { events, eventId, selectedEvent, selectEvent, loading: eventsLoading, error: eventsError } =
     useSelectedEvent();
 
   const [guests, setGuests] = useState<Guest[]>([]);
   const [summary, setSummary] = useState<RsvpSummary | null>(null);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => searchParams.get('q') ?? '');
   const [category, setCategory] = useState<GuestCategory | 'all'>('all');
   const [rsvpFilter, setRsvpFilter] = useState<RsvpStatus | 'all'>('all');
   const [pageLoading, setPageLoading] = useState(false);
@@ -115,6 +116,13 @@ export function GuestsPage() {
       setPageLoading(false);
     }
   }, [eventId, search, category, rsvpFilter]);
+
+  useEffect(() => {
+    const query = searchParams.get('q');
+    if (query !== null) {
+      setSearch(query);
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     void loadGuests();

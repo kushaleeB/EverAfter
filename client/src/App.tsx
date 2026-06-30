@@ -15,6 +15,7 @@ import { EventsPage } from '@/pages/EventsPage';
 import { CreateEventPage } from '@/pages/CreateEventPage';
 import { OverviewPage } from '@/pages/OverviewPage';
 import { InvitationsPage } from '@/pages/InvitationsPage';
+import { InvitationEditorPage } from '@/pages/InvitationEditorPage';
 import { MediaPage } from '@/pages/MediaPage';
 import { GuestsPage } from '@/pages/GuestsPage';
 import { RSVPsPage } from '@/pages/RSVPsPage';
@@ -77,6 +78,14 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <InvitationsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/dashboard/invitations/:invitationId/edit"
+            element={
+              <ProtectedRoute>
+                <InvitationEditorPage />
               </ProtectedRoute>
             }
           />

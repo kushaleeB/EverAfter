@@ -48,6 +48,10 @@ interface RequestConfig {
   skipAuthRetry?: boolean;
 }
 
+export function isSuccessStatus(status: number): boolean {
+  return status >= 200 && status < 300;
+}
+
 function shouldSkipAuthRetry(path: string, config: RequestConfig) {
   return config.skipAuthRetry || AUTH_RETRY_SKIP_PATHS.some((p) => path.startsWith(p));
 }
@@ -79,7 +83,17 @@ async function parseResponse<T>(response: Response): Promise<T> {
 
   const payload = await response.json();
 
-  if (!response.ok || payload.success === false) {
+  if (!isSuccessStatus(response.status)) {
+    const error = payload as ApiErrorBody;
+    throw new ApiError(
+      error.error?.message ?? 'Request failed',
+      response.status,
+      error.error?.code,
+      error.error?.details,
+    );
+  }
+
+  if (payload.success === false) {
     const error = payload as ApiErrorBody;
     throw new ApiError(
       error.error?.message ?? 'Request failed',
@@ -175,7 +189,17 @@ export async function apiRequestWithMeta<T>(
 
   const payload = (await response.json()) as ApiSuccessBody<T> | ApiErrorBody;
 
-  if (!response.ok || payload.success === false) {
+  if (!isSuccessStatus(response.status)) {
+    const error = payload as ApiErrorBody;
+    throw new ApiError(
+      error.error?.message ?? 'Request failed',
+      response.status,
+      error.error?.code,
+      error.error?.details,
+    );
+  }
+
+  if (payload.success === false) {
     const error = payload as ApiErrorBody;
     throw new ApiError(
       error.error?.message ?? 'Request failed',

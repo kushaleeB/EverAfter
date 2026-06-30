@@ -2,6 +2,7 @@ import path from 'path';
 import prisma from '../lib/prisma.js';
 import { AppError } from '../errors/AppError.js';
 import env from '../config/env.js';
+import { serializeMediaAsset } from '../utils/serialize.js';
 
 const MIME_TO_TYPE = {
   'image/jpeg': 'image',
@@ -14,17 +15,18 @@ const MIME_TO_TYPE = {
 
 export class MediaService {
   async listByEvent(eventId) {
-    return prisma.mediaAsset.findMany({
+    const assets = await prisma.mediaAsset.findMany({
       where: { eventId, deletedAt: null },
       orderBy: { sortOrder: 'asc' },
     });
+    return serializeMediaAsset(assets);
   }
 
   async upload(eventId, userId, file, invitationId = null) {
     const storageKey = `events/${eventId}/${file.filename}`;
     const fileUrl = `/uploads/${file.filename}`;
 
-    return prisma.mediaAsset.create({
+    const asset = await prisma.mediaAsset.create({
       data: {
         eventId,
         uploadedBy: userId,
@@ -37,6 +39,7 @@ export class MediaService {
         fileSizeBytes: BigInt(file.size),
       },
     });
+    return serializeMediaAsset(asset);
   }
 
   async softDelete(mediaId, eventId, userId) {
