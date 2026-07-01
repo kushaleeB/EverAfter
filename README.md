@@ -105,6 +105,20 @@ The Express backend is configured for [Railway](https://railway.app) in `server/
    ```
    Then run `npm run dev:remote`.
 
+### 6. Deploy frontend to Railway
+
+The React app is configured in `client/` (`Dockerfile`, `railway.toml`).
+
+1. In the same Railway project, add a **second service** from the same GitHub repo.
+2. Set **Root Directory** to `client`.
+3. Add build-time variable:
+   - `VITE_API_BASE_URL=https://<your-api-railway-url>/api/v1`
+4. Generate a **public domain** for the frontend service.
+5. Update the **backend** `APP_URL` and `CORS_ORIGIN` to the frontend Railway URL.
+6. Redeploy both services after env changes.
+
+The frontend container serves `dist/` with `serve` on Railway's `PORT` (fixes 502 from missing/wrong start command).
+
 **Note:** Uploaded files are stored on the container disk and reset on redeploy. For production, plan to move media to Supabase Storage or S3.
 
 ## Root scripts
