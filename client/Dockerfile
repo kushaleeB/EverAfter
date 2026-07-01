@@ -19,17 +19,11 @@ FROM node:20-bookworm-slim
 
 WORKDIR /app
 
-COPY package.json ./
-RUN npm install --omit=dev
+RUN npm install -g serve@14
 
 COPY --from=builder /app/dist ./dist
-COPY scripts ./scripts
 
 ENV NODE_ENV=production
 
-EXPOSE 3000
-
-HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 \
-  CMD node -e "fetch('http://127.0.0.1:' + (process.env.PORT || 3000) + '/').then((r) => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))"
-
-CMD ["node", "scripts/start.mjs"]
+# Railway injects PORT; exec keeps serve as PID 1 for correct signal handling.
+CMD ["sh", "-c", "exec serve -s dist -l tcp://0.0.0.0:${PORT:-3000}"]
