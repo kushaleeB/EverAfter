@@ -85,6 +85,28 @@ npm run build:client   # outputs to client/dist
 npm start              # runs Express server
 ```
 
+### 5. Deploy API to Railway
+
+The Express backend is configured for [Railway](https://railway.app) in `server/` (`Dockerfile`, `railway.toml`).
+
+1. Create a new Railway project → **Deploy from GitHub repo** → select this repository.
+2. In service **Settings**, set **Root Directory** to `server`.
+3. Add environment variables (see `.env.example` → Railway section):
+   - `NODE_ENV=production`
+   - `DATABASE_URL` (Supabase Postgres)
+   - `JWT_ACCESS_SECRET` / `JWT_REFRESH_SECRET`
+   - `APP_URL` (production frontend URL)
+   - `CORS_ORIGIN` (comma-separated: production frontend + `http://localhost:5173` for local testing)
+4. Deploy. Railway assigns a public URL (e.g. `https://everafter-api.up.railway.app`).
+5. Verify: `GET https://<your-railway-url>/api/v1/health`
+6. Point local frontend at the hosted API in `.env.local`:
+   ```
+   VITE_API_PROXY_TARGET=https://<your-railway-url>
+   ```
+   Then run `npm run dev:remote`.
+
+**Note:** Uploaded files are stored on the container disk and reset on redeploy. For production, plan to move media to Supabase Storage or S3.
+
 ## Root scripts
 
 | Script | Description |

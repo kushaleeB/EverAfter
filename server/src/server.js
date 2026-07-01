@@ -15,9 +15,10 @@ const { default: env } = await import('./config/env.js');
 const { default: prisma } = await import('./lib/prisma.js');
 
 const PORT = env.PORT;
+const HOST = '0.0.0.0';
 
-const server = app.listen(PORT, () => {
-  console.log(`EverAfter API v1 → http://localhost:${PORT}/api/v1`);
+const server = app.listen(PORT, HOST, () => {
+  console.log(`EverAfter API v1 listening on ${HOST}:${PORT}`);
 });
 
 server.on('error', (err) => {

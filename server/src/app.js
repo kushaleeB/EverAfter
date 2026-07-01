@@ -21,7 +21,13 @@ app.use(requestId);
 app.use(compression());
 app.use(
   cors({
-    origin: env.CORS_ORIGIN,
+    origin(origin, callback) {
+      if (!origin || env.corsOrigins.includes(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(null, false);
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id'],

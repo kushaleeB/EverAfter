@@ -14,6 +14,7 @@
   "scripts": {
     "dev": "node scripts/free-ports.mjs && concurrently -n client,server -c cyan,magenta \"npm run dev -w @everafter/client\" \"npm run dev -w @everafter/server\"",
     "dev:client": "npm run dev -w @everafter/client",
+    "dev:remote": "node scripts/free-ports.mjs && npm run dev -w @everafter/client",
     "dev:server": "npm run dev -w @everafter/server",
     "build": "npm run build -w @everafter/client",
     "build:client": "npm run build -w @everafter/client",
