@@ -32,6 +32,8 @@ export interface Event {
   updatedAt: string;
 }
 
+export type GuestInviteStatus = 'not_sent' | 'sent' | 'opened' | 'responded';
+
 export interface GuestRsvpSnippet {
   id: string;
   status: RsvpStatus;
@@ -51,7 +53,10 @@ export interface Guest {
   partySize: number;
   plusOneAllowed: boolean;
   accessToken: string;
+  inviteStatus?: GuestInviteStatus;
   inviteSentAt: string | null;
+  inviteOpenedAt?: string | null;
+  respondedAt?: string | null;
   notes: string | null;
   createdAt: string;
   updatedAt: string;
@@ -80,6 +85,39 @@ export interface RsvpSummary {
   guestCountByCategory: Record<string, number>;
   totalAttendingCount: number;
   responseRate: number;
+}
+
+export interface InvitationAnalytics {
+  publishedInvitation: {
+    id: string;
+    slug: string;
+    headline: string | null;
+  } | null;
+  totalGuests: number;
+  invited: number;
+  attending: number;
+  declined: number;
+  pending: number;
+  responseRate: number;
+  invitationsSent?: number;
+  invitationOpens?: number;
+  openRate?: number;
+  rsvpReceived?: number;
+  byInviteStatus?: Record<GuestInviteStatus, number>;
+}
+
+export interface SendInvitationResult {
+  status: string;
+  sentAt: string | null;
+  invitationUrl: string;
+  whatsappUrl?: string;
+}
+
+export interface BulkSendInvitationResult {
+  sent: number;
+  failed: number;
+  results: Array<{ guestId: string; success: true; data: SendInvitationResult }>;
+  errors: Array<{ guestId: string; success: false; message: string }>;
 }
 
 export interface Rsvp {
@@ -217,6 +255,15 @@ export interface CreateInvitationPayload {
     content?: Record<string, unknown>;
     isVisible?: boolean;
   }>;
+}
+
+export interface PublishInvitationResult {
+  id: string;
+  status: InvitationStatus;
+  publishedAt: string | null;
+  publicSlug: string;
+  slug: string;
+  publicUrl: string;
 }
 
 export interface UpdateInvitationPayload {

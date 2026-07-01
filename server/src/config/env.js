@@ -31,10 +31,14 @@ const envSchema = z
     SUPABASE_PROJECT_URL: z.string().url().optional(),
     SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
     SUPABASE_STORAGE_BUCKET: z.string().default('ever-after'),
+    UPLOAD_STORAGE: z.enum(['local', 'supabase', 'auto']).default('auto'),
     UPLOAD_DIR: z.string().default('uploads'),
     MAX_FILE_SIZE_MB: z.coerce.number().default(10),
     RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900_000),
     RATE_LIMIT_MAX: z.coerce.number().default(100),
+    EMAIL_PROVIDER: z.enum(['console', 'resend', 'sendgrid', 'brevo']).default('console'),
+    EMAIL_FROM: z.string().min(3).default('EverAfter <invitations@everafter.com>'),
+    EMAIL_API_KEY: z.string().optional(),
   })
   .superRefine((data, ctx) => {
     const databaseUrl = data.DATABASE_URL || data.SUPABASE_URL;

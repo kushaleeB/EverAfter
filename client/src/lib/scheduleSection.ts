@@ -1,4 +1,5 @@
 import type { InvitationSection } from '@/types/api';
+import { resolveOptionalMediaUrl } from '@/lib/mediaUrl';
 
 export type ScheduleEventType =
   | 'ceremony'
@@ -321,12 +322,13 @@ function parseDressCode(value: unknown, legacyDressCode?: string): ScheduleDress
   return {
     type: parseDressCodeType(record.type),
     customText: readString(record.customText),
-    imageUrl:
+    imageUrl: resolveOptionalMediaUrl(
       imageUrlRaw === null
         ? null
         : typeof imageUrlRaw === 'string' && imageUrlRaw.length > 0
           ? imageUrlRaw
           : null,
+    ),
   };
 }
 
@@ -366,12 +368,13 @@ function parseScheduleItems(value: unknown): ScheduleEvent[] {
         mapsUrl: readString(record.mapsUrl),
         description: readString(record.description),
         icon: readString(record.icon, DEFAULT_SCHEDULE_EVENT.icon),
-        backgroundImageUrl:
+        backgroundImageUrl: resolveOptionalMediaUrl(
           imageUrlRaw === null
             ? null
             : typeof imageUrlRaw === 'string' && imageUrlRaw.length > 0
               ? imageUrlRaw
               : null,
+        ),
         showTime: readBool(record.showTime, DEFAULT_SCHEDULE_EVENT.showTime),
         showVenue: readBool(record.showVenue, DEFAULT_SCHEDULE_EVENT.showVenue),
         showDescription: readBool(record.showDescription, DEFAULT_SCHEDULE_EVENT.showDescription),
@@ -412,12 +415,13 @@ export function parseScheduleDetails(section: InvitationSection | undefined): Sc
       : DEFAULT_SCHEDULE_DETAILS.animation;
 
   const imageUrlRaw = content.backgroundImageUrl;
-  const backgroundImageUrl =
+  const backgroundImageUrl = resolveOptionalMediaUrl(
     imageUrlRaw === null
       ? null
       : typeof imageUrlRaw === 'string' && imageUrlRaw.length > 0
         ? imageUrlRaw
-        : null;
+        : null,
+  );
 
   const firstItemDressCode =
     Array.isArray(content.items) && content.items[0] && typeof content.items[0] === 'object'

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { publicApi } from '@/api/public';
 import { GuestSuccessScreen } from '@/components/guest/GuestSuccessScreen';
 import { ApiError } from '@/lib/api';
+import { formatGuestName } from '@/lib/guests';
 import { parseRsvpDetails, rsvpButtonHoverClass, rsvpWidthToCss, visibleFormFields } from '@/lib/rsvpSection';
 import { cn } from '@/lib/utils';
 import type { Invitation, InvitationSection } from '@/types/api';
@@ -10,9 +11,11 @@ import type { PublicGuest } from '@/types/public';
 interface RsvpGuestSectionProps {
   section: InvitationSection;
   invitation: Invitation;
-  accessToken: string;
   guest: PublicGuest;
+  accessToken?: string;
+  guestId?: string;
   initialResponded?: boolean;
+  allowEdit?: boolean;
 }
 
 type AttendanceValue = 'attending' | 'declined' | 'maybe';
@@ -21,14 +24,17 @@ export function RsvpGuestSection({
   section,
   invitation,
   accessToken,
+  guestId,
   guest,
   initialResponded = false,
+  allowEdit = false,
 }: RsvpGuestSectionProps) {
   const rsvp = parseRsvpDetails(section, invitation);
   const fields = visibleFormFields(rsvp);
   const enabledAttendance = rsvp.attendanceOptions.filter((option) => option.enabled);
 
   const [submitted, setSubmitted] = useState(initialResponded);
+  const [sessionToken, setSessionToken] = useState(accessToken ?? '');
   const [status, setStatus] = useState<AttendanceValue>('attending');
   const [attendingCount, setAttendingCount] = useState(Math.min(1, guest.partySize));
   const [dietaryNotes, setDietaryNotes] = useState('');
@@ -37,11 +43,13 @@ export function RsvpGuestSection({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  if (submitted) {
+  const guestName = formatGuestName(guest.firstName, guest.lastName);
+
+  if (submitted && sessionToken) {
     return (
       <GuestSuccessScreen
         slug={invitation.slug}
-        accessToken={accessToken}
+        accessToken={sessionToken}
         invitation={invitation}
       />
     );
@@ -49,6 +57,8 @@ export function RsvpGuestSection({
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
+    if (!accessToken && !guestId) return;
+
     setIsSubmitting(true);
     setError(null);
 
@@ -61,17 +71,26 @@ export function RsvpGuestSection({
       .filter(Boolean)
       .join('\n');
 
+    const payload = {
+      ...(accessToken ? { accessToken } : { guestId }),
+      status,
+      attendingCount: status === 'attending' ? attendingCount : 0,
+      dietaryNotes: notes || undefined,
+      message: message.trim() || undefined,
+    };
+
     try {
-      await publicApi.submitRsvp(invitation.slug, {
-        accessToken,
-        status,
-        attendingCount: status === 'attending' ? attendingCount : 0,
-        dietaryNotes: notes || undefined,
-        message: message.trim() || undefined,
-      });
+      const result = allowEdit
+        ? await publicApi.updateRsvp(invitation.slug, payload)
+        : await publicApi.submitRsvp(invitation.slug, payload);
+      setSessionToken(result.accessToken ?? accessToken ?? '');
       setSubmitted(true);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : 'Unable to submit your RSVP. Please try again.');
+      if (err instanceof ApiError && err.status === 409) {
+        setError('We have already received your RSVP.');
+      } else {
+        setError(err instanceof ApiError ? err.message : 'Unable to submit your RSVP. Please try again.');
+      }
     } finally {
       setIsSubmitting(false);
     }
@@ -110,6 +129,8 @@ export function RsvpGuestSection({
           </p>
         )}
 
+        <p className="mt-4 font-body text-sm font-medium text-[#4e342e]">Guest: {guestName}</p>
+
         <form className="mt-6 space-y-4 text-left" onSubmit={handleSubmit}>
           {fields.map((field) => {
             if (field.key === 'attendance') {
@@ -144,7 +165,7 @@ export function RsvpGuestSection({
               return (
                 <div key={field.key}>
                   <label className="font-body text-xs font-medium text-[#6d625a]">
-                    Number attending (max {guest.partySize})
+                    Number of guests (max {guest.partySize})
                   </label>
                   <input
                     type="number"
@@ -181,7 +202,9 @@ export function RsvpGuestSection({
             if (field.key === 'dietaryRestrictions') {
               return (
                 <div key={field.key}>
-                  <label className="font-body text-xs font-medium text-[#6d625a]">Dietary Restrictions</label>
+                  <label className="font-body text-xs font-medium text-[#6d625a]">
+                    Dietary Requirements
+                  </label>
                   <textarea
                     rows={3}
                     value={dietaryNotes}
@@ -232,7 +255,7 @@ export function RsvpGuestSection({
               borderWidth: rsvp.buttonStyle === 'outline' ? 2 : 0,
             }}
           >
-            {isSubmitting ? 'Submitting...' : rsvp.button.text}
+            {isSubmitting ? 'Submitting...' : allowEdit ? 'Update RSVP' : rsvp.button.text}
           </button>
         </form>
       </div>

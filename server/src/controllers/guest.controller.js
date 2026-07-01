@@ -76,3 +76,27 @@ export const markInviteSent = async (req, res) => {
   const guest = await guestService.markInviteSent(req.params.eventId, req.params.guestId);
   sendSuccess(res, guest);
 };
+
+export const sendInvitation = async (req, res) => {
+  const result = await guestService.sendInvitation(
+    req.params.eventId,
+    req.params.guestId,
+    req.body,
+  );
+  sendSuccess(res, {
+    status: result.status,
+    sentAt: result.sentAt,
+    invitationUrl: result.invitationUrl,
+    whatsappUrl: result.whatsappUrl,
+  });
+};
+
+export const sendBulkInvitations = async (req, res) => {
+  const result = await guestService.sendBulkInvitations(req.params.eventId, req.body);
+  sendSuccess(res, result);
+};
+
+export const invitationAnalytics = async (req, res) => {
+  const analytics = await guestService.getInvitationAnalytics(req.params.eventId);
+  sendSuccess(res, analytics);
+};

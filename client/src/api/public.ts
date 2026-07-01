@@ -1,6 +1,8 @@
 import { apiRequest } from '@/lib/api';
 import type {
   GuestQrData,
+  PublicGuestRsvpState,
+  PublicGuestSearchResult,
   PublicInvitationPage,
   SubmitRsvpPayload,
   SubmitRsvpResult,
@@ -15,6 +17,36 @@ export const publicApi = {
     const query = params.toString();
     return apiRequest<PublicInvitationPage>(
       `/public/invitations/${slug}/page${query ? `?${query}` : ''}`,
+      {},
+      { skipAuthRetry: true },
+    );
+  },
+
+  getPublicInvitation(slug: string) {
+    return apiRequest<PublicInvitationPage['invitation']>(
+      `/public/invitations/${slug}`,
+      {},
+      { skipAuthRetry: true },
+    );
+  },
+
+  searchGuests(slug: string, query = '') {
+    const params = new URLSearchParams();
+    if (query.trim()) params.set('q', query.trim());
+    const qs = params.toString();
+    return apiRequest<{ guests: PublicGuestSearchResult[] }>(
+      `/public/invitations/${slug}/guests${qs ? `?${qs}` : ''}`,
+      {},
+      { skipAuthRetry: true },
+    ).then((result) => result.guests);
+  },
+
+  getGuestRsvp(slug: string, { accessToken, guestId }: { accessToken?: string; guestId?: string }) {
+    const params = new URLSearchParams();
+    if (accessToken) params.set('accessToken', accessToken);
+    if (guestId) params.set('guestId', guestId);
+    return apiRequest<PublicGuestRsvpState>(
+      `/public/invitations/${slug}/rsvp?${params.toString()}`,
       {},
       { skipAuthRetry: true },
     );
@@ -36,7 +68,7 @@ export const publicApi = {
     }, { skipAuthRetry: true });
   },
 
-  updateRsvp(slug: string, body: Partial<SubmitRsvpPayload> & { accessToken: string }) {
+  updateRsvp(slug: string, body: Partial<SubmitRsvpPayload> & { accessToken?: string; guestId?: string }) {
     return apiRequest<SubmitRsvpResult>(`/public/invitations/${slug}/rsvp`, {
       method: 'PATCH',
       body: JSON.stringify(body),

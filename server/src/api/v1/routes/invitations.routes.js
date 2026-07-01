@@ -63,6 +63,20 @@ router.post(
 );
 
 router.post(
+  '/:invitationId/unpublish',
+  validateMultiple({ params: invitationParams }),
+  requireEventAccess(PERMISSIONS.INVITATION_PUBLISH),
+  asyncHandler(invitationController.unpublish),
+);
+
+router.post(
+  '/:invitationId/duplicate',
+  validateMultiple({ params: invitationParams }),
+  requireEventAccess(PERMISSIONS.INVITATION_WRITE),
+  asyncHandler(invitationController.duplicate),
+);
+
+router.post(
   '/:invitationId/archive',
   validateMultiple({ params: invitationParams }),
   requireEventAccess(PERMISSIONS.INVITATION_WRITE),

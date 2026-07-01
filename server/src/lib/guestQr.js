@@ -1,8 +1,8 @@
 import env from '../config/env.js';
-import { generateQrDataUrl, generateQrBuffer } from './qr.js';
+import { buildGuestInvitationUrl } from './guestInviteUrl.js';
 
 export function buildRsvpUrl(invitation, guest) {
-  return `${env.APP_URL}/invite/${invitation.slug}?accessToken=${guest.accessToken}`;
+  return buildGuestInvitationUrl(invitation.slug, guest.accessToken);
 }
 
 /** Structured payload for future POST /api/v1/checkin/scan */
@@ -31,6 +31,7 @@ export function toPublicGuestQrResponse(result) {
 }
 
 export async function generateGuestQrResult(guest, invitation, format = 'dataurl') {
+  const { generateQrDataUrl, generateQrBuffer } = await import('./qr.js');
   const rsvpUrl = buildRsvpUrl(invitation, guest);
   const qrText = buildCheckInQrText(guest, invitation);
 

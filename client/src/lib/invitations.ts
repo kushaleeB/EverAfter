@@ -75,6 +75,17 @@ export function statusBadgeClass(status: InvitationStatus) {
   }
 }
 
+export function statusLabel(status: InvitationStatus) {
+  switch (status) {
+    case 'published':
+      return 'Published';
+    case 'archived':
+      return 'Archived';
+    default:
+      return 'Draft';
+  }
+}
+
 export function defaultInvitationSections() {
   return [
     { sectionType: 'hero' as const, sortOrder: 0, content: { overlayOpacity: 0.4 }, isVisible: true },

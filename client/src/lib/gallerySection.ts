@@ -1,4 +1,5 @@
 import type { InvitationSection } from '@/types/api';
+import { resolveOptionalMediaUrl, resolveRequiredMediaUrl } from '@/lib/mediaUrl';
 
 export const MAX_GALLERY_UPLOAD_MB = 10;
 export const MAX_GALLERY_UPLOAD_BYTES = MAX_GALLERY_UPLOAD_MB * 1024 * 1024;
@@ -197,12 +198,13 @@ function parseAlbums(value: unknown): GalleryAlbum[] {
         name: readString(record.name, 'Album'),
         albumType: parseAlbumType(record.albumType),
         description: readString(record.description),
-        coverImageUrl:
+        coverImageUrl: resolveOptionalMediaUrl(
           coverRaw === null
             ? null
             : typeof coverRaw === 'string' && coverRaw.length > 0
               ? coverRaw
               : null,
+        ),
       };
     })
     .filter((item): item is GalleryAlbum => item !== null);
@@ -220,7 +222,7 @@ function parseImages(value: unknown, albums: GalleryAlbum[]): GalleryImage[] {
       if (!url) return null;
       return {
         id: readString(record.id, `image-${index}`),
-        url,
+        url: resolveRequiredMediaUrl(url),
         alt: readString(record.alt),
         caption: readString(record.caption),
         albumId: readString(record.albumId, fallbackAlbumId),
@@ -312,12 +314,13 @@ export function parseGalleryDetails(section: InvitationSection | undefined): Gal
       : DEFAULT_GALLERY_DETAILS.galleryWidth;
 
   const imageUrlRaw = content.backgroundImageUrl;
-  const backgroundImageUrl =
+  const backgroundImageUrl = resolveOptionalMediaUrl(
     imageUrlRaw === null
       ? null
       : typeof imageUrlRaw === 'string' && imageUrlRaw.length > 0
         ? imageUrlRaw
-        : null;
+        : null,
+  );
 
   return {
     sectionTitle: readString(content.sectionTitle, DEFAULT_GALLERY_DETAILS.sectionTitle),

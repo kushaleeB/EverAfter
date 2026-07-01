@@ -1,4 +1,5 @@
 import guestRepository from '../repositories/guest.repository.js';
+import invitationSendService from './invitation-send.service.js';
 import { parseGuestCsv, GUEST_CATEGORY_LABELS } from '../lib/csv.js';
 import { generateGuestQrResult } from '../lib/guestQr.js';
 import { parsePagination, buildPaginationMeta } from '../utils/pagination.js';
@@ -22,9 +23,14 @@ function resolveRsvpStatus(rsvps) {
 function enrichGuest(guest) {
   const rsvpStatus = resolveRsvpStatus(guest.rsvps);
   const latestRsvp = guest.rsvps?.[0] ?? null;
+  const inviteStatus =
+    guest.respondedAt || latestRsvp?.respondedAt
+      ? 'responded'
+      : guest.inviteStatus ?? (guest.inviteSentAt ? 'sent' : 'not_sent');
 
   return {
     ...guest,
+    inviteStatus,
     rsvpStatus,
     latestRsvp: latestRsvp
       ? {
@@ -178,6 +184,9 @@ export class GuestService {
         rsvpStatus: g.rsvpStatus,
         latestRsvp: g.latestRsvp,
         inviteSentAt: g.inviteSentAt,
+        inviteStatus: g.inviteStatus,
+        inviteOpenedAt: g.inviteOpenedAt,
+        respondedAt: g.respondedAt,
       })),
       meta: result.meta,
     };
@@ -199,8 +208,22 @@ export class GuestService {
     const guest = await this.repo.findById(guestId, eventId);
     if (!guest) throw AppError.notFound('Guest');
 
-    const updated = await this.repo.update(guestId, { inviteSentAt: new Date() });
+    const updated = await this.repo.markInviteSent(guestId);
     return enrichGuest(updated);
+  }
+
+  async sendInvitation(eventId, guestId, options = {}) {
+    const result = await invitationSendService.sendToGuest(eventId, guestId, options);
+    const guest = await this.getById(eventId, guestId);
+    return { ...result, guest };
+  }
+
+  async sendBulkInvitations(eventId, body) {
+    return invitationSendService.sendBulk(eventId, body);
+  }
+
+  async getInvitationAnalytics(eventId) {
+    return invitationSendService.getInvitationAnalytics(eventId);
   }
 }
 

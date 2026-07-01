@@ -1,4 +1,5 @@
 import rsvpRepository from '../repositories/rsvp.repository.js';
+import guestRepository from '../repositories/guest.repository.js';
 import { serializeInvitation } from '../utils/serialize.js';
 import { generateGuestQrResult, toPublicGuestQrResponse } from '../lib/guestQr.js';
 import { parsePagination, buildPaginationMeta } from '../utils/pagination.js';
@@ -76,8 +77,9 @@ function buildAnalytics(rsvps, totalGuests) {
 }
 
 export class RsvpService {
-  constructor(repo = rsvpRepository) {
+  constructor(repo = rsvpRepository, guestRepo = guestRepository) {
     this.repo = repo;
+    this.guestRepo = guestRepo;
   }
 
   // ─── Public: Invitation Page ───────────────────────────────────────────────
@@ -109,6 +111,8 @@ export class RsvpService {
       const guest = await this.repo.findGuestByToken(invitation.eventId, accessToken);
       if (!guest) throw AppError.unauthorized('Invalid guest access token');
 
+      await this.guestRepo.recordInviteOpened(guest.id);
+
       page.guest = guest;
       page.rsvp = await this.repo.findByGuestAndInvitation(guest.id, invitation.id);
     }
@@ -118,45 +122,78 @@ export class RsvpService {
 
   // ─── Public: Guest RSVP ────────────────────────────────────────────────────
 
-  async _resolveGuestAndInvitation(slug, accessToken) {
+  async _resolvePublishedInvitation(slug) {
     const invitation = await this.repo.findPublishedInvitation(slug);
     if (!invitation) throw AppError.notFound('Invitation');
-
-    const guest = await this.repo.findGuestByToken(invitation.eventId, accessToken);
-    if (!guest) throw AppError.unauthorized('Invalid guest access token');
-
-    return { invitation, guest };
+    return invitation;
   }
 
-  async getGuestRsvp(slug, accessToken) {
-    const { invitation, guest } = await this._resolveGuestAndInvitation(slug, accessToken);
+  async _resolveGuestForRsvp(slug, { accessToken = null, guestId = null } = {}) {
+    const invitation = await this._resolvePublishedInvitation(slug);
+
+    let guest = null;
+    if (accessToken) {
+      guest = await this.repo.findGuestByToken(invitation.eventId, accessToken);
+      if (!guest) throw AppError.unauthorized('Invalid guest access token');
+    } else if (guestId) {
+      guest = await this.repo.findGuestByIdForEvent(invitation.eventId, guestId);
+      if (!guest) throw AppError.badRequest('Guest not found for this invitation');
+    } else {
+      throw AppError.badRequest('guestId or accessToken is required');
+    }
+
+    const { accessToken: _token, ...publicGuest } = guest;
+    return { invitation, guest: publicGuest, guestAccessToken: guest.accessToken };
+  }
+
+  async listPublicGuests(slug, search = '') {
+    const invitation = await this._resolvePublishedInvitation(slug);
+    const guests = await this.repo.searchGuestsForEvent(invitation.eventId, search);
+    return { guests };
+  }
+
+  async getGuestRsvp(slug, { accessToken = null, guestId = null } = {}) {
+    const { invitation, guest } = await this._resolveGuestForRsvp(slug, { accessToken, guestId });
 
     const rsvp = await this.repo.findByGuestAndInvitation(guest.id, invitation.id);
 
     return {
       guest,
-      rsvp: rsvp ?? { status: 'pending', attendingCount: 0 },
+      rsvp: rsvp ?? { status: 'pending', attendingCount: 0, respondedAt: null },
       invitation: { id: invitation.id, slug: invitation.slug, rsvpDeadline: invitation.rsvpDeadline },
     };
   }
 
   async getPublicGuestQr(slug, accessToken) {
-    const { invitation, guest } = await this._resolveGuestAndInvitation(slug, accessToken);
+    const { invitation, guest, guestAccessToken } = await this._resolveGuestForRsvp(slug, {
+      accessToken,
+    });
 
     const rsvp = await this.repo.findByGuestAndInvitation(guest.id, invitation.id);
     if (!rsvp?.respondedAt) {
       throw AppError.forbidden('Complete your RSVP before generating a guest pass');
     }
 
-    const result = await generateGuestQrResult(guest, invitation);
+    const result = await generateGuestQrResult(
+      { ...guest, accessToken: guestAccessToken },
+      invitation,
+    );
     return toPublicGuestQrResponse(result);
   }
 
   async submitRsvp(slug, data, meta = {}) {
-    const { invitation, guest } = await this._resolveGuestAndInvitation(slug, data.accessToken);
+    const { invitation, guest, guestAccessToken } = await this._resolveGuestForRsvp(slug, {
+      accessToken: data.accessToken,
+      guestId: data.guestId,
+    });
 
     if (invitation.rsvpDeadline && new Date() > new Date(invitation.rsvpDeadline)) {
       throw AppError.badRequest('RSVP deadline has passed');
+    }
+
+    const existing = await this.repo.findByGuestAndInvitation(guest.id, invitation.id);
+    if (existing?.respondedAt) {
+      throw AppError.conflict('We have already received your RSVP.');
     }
 
     validateAttendingCount(data.status, data.attendingCount, guest.partySize);
@@ -170,14 +207,21 @@ export class RsvpService {
       ipAddress: meta.ipAddress,
     });
 
+    await this.guestRepo.recordInviteResponded(guest.id, rsvp.respondedAt);
+
     return {
       rsvp,
+      guest,
+      accessToken: guestAccessToken,
       message: 'Thank you! Your RSVP has been recorded.',
     };
   }
 
   async updateGuestRsvp(slug, data, meta = {}) {
-    const { invitation, guest } = await this._resolveGuestAndInvitation(slug, data.accessToken);
+    const { invitation, guest, guestAccessToken } = await this._resolveGuestForRsvp(slug, {
+      accessToken: data.accessToken,
+      guestId: data.guestId,
+    });
 
     const existing = await this.repo.findByGuestAndInvitation(guest.id, invitation.id);
     if (!existing?.respondedAt) {
@@ -202,8 +246,12 @@ export class RsvpService {
       ipAddress: meta.ipAddress ?? existing.ipAddress,
     });
 
+    await this.guestRepo.recordInviteResponded(guest.id, rsvp.respondedAt);
+
     return {
       rsvp,
+      guest,
+      accessToken: guestAccessToken,
       message: 'Your RSVP has been updated.',
     };
   }

@@ -39,6 +39,17 @@ export const guestIdParamSchema = z.object({
   guestId: z.string().uuid(),
 });
 
+export const sendInvitationBodySchema = z.object({
+  channel: z.enum(['email', 'link', 'whatsapp']).default('email'),
+  invitationId: z.string().uuid().optional(),
+});
+
+export const sendBulkInvitationsBodySchema = z.object({
+  guestIds: z.array(z.string().uuid()).min(1).max(100),
+  channel: z.enum(['email', 'link', 'whatsapp']).default('email'),
+  invitationId: z.string().uuid().optional(),
+});
+
 export const guestQrQuerySchema = z.object({
   invitationId: z.string().uuid().optional(),
   format: z.enum(['dataurl', 'png']).default('dataurl'),

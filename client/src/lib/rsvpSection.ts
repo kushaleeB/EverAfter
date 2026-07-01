@@ -1,4 +1,5 @@
 import type { Invitation, InvitationSection, RsvpAnalytics } from '@/types/api';
+import { resolveOptionalMediaUrl } from '@/lib/mediaUrl';
 
 export type RsvpFieldKey =
   | 'guestName'
@@ -338,12 +339,13 @@ export function parseRsvpDetails(
   const content = section?.content ?? {};
 
   const imageUrlRaw = content.backgroundImageUrl;
-  const backgroundImageUrl =
+  const backgroundImageUrl = resolveOptionalMediaUrl(
     imageUrlRaw === null
       ? null
       : typeof imageUrlRaw === 'string' && imageUrlRaw.length > 0
         ? imageUrlRaw
-        : null;
+        : null,
+  );
 
   const widthRaw = readString(content.sectionWidth);
   const sectionWidth =

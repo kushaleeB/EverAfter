@@ -1,11 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { publicApi } from '@/api/public';
+import { InvitationNotAvailable } from '@/components/invitations/InvitationNotAvailable';
 import { GallerySectionPreview } from '@/components/invitations/GallerySectionPreview';
-import { RsvpGuestSection } from '@/components/guest/RsvpGuestSection';
+import { GuestPublicRsvpSection } from '@/components/guest/GuestPublicRsvpSection';
 import { ScheduleSectionPreview } from '@/components/invitations/ScheduleSectionPreview';
 import { StorySectionPreview } from '@/components/invitations/StorySectionPreview';
-import { GuestSuccessScreen } from '@/components/guest/GuestSuccessScreen';
 import {
   backgroundPositionToCss,
   contentWidthToCss,
@@ -107,8 +107,7 @@ function PublicHero({ invitation }: { invitation: Invitation }) {
 function renderSection(
   section: InvitationSection,
   invitation: Invitation,
-  accessToken: string | undefined,
-  page: PublicInvitationPage,
+  slug: string,
 ) {
   if (!section.isVisible) return null;
 
@@ -122,34 +121,12 @@ function renderSection(
     case 'gallery':
       return <GallerySectionPreview key={section.id} section={section} />;
     case 'rsvp':
-      if (!accessToken || !page.guest) {
-        return (
-          <section key={section.id} className="px-6 py-10 text-center">
-            <p className="font-body text-sm text-[#6d625a]">
-              Please use your personal invitation link to RSVP.
-            </p>
-          </section>
-        );
-      }
-
-      if (page.rsvp?.respondedAt) {
-        return (
-          <GuestSuccessScreen
-            key={section.id}
-            slug={invitation.slug}
-            accessToken={accessToken}
-            invitation={invitation}
-          />
-        );
-      }
-
       return (
-        <RsvpGuestSection
+        <GuestPublicRsvpSection
           key={section.id}
           section={section}
           invitation={invitation}
-          accessToken={accessToken}
-          guest={page.guest}
+          slug={slug}
         />
       );
     default:
@@ -165,11 +142,10 @@ function renderSection(
 
 export function PublicInvitationPage() {
   const { slug = '' } = useParams();
-  const [searchParams] = useSearchParams();
-  const accessToken = searchParams.get('accessToken') ?? searchParams.get('token') ?? undefined;
 
   const [page, setPage] = useState<PublicInvitationPage | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -177,15 +153,20 @@ export function PublicInvitationPage() {
 
     setLoading(true);
     setError(null);
+    setNotFound(false);
 
     publicApi
-      .getPublicPage(slug, accessToken)
+      .getPublicPage(slug)
       .then((data) => {
         if (!cancelled) setPage(data);
       })
       .catch((err) => {
         if (!cancelled) {
-          setError(err instanceof ApiError ? err.message : 'Unable to load this invitation.');
+          if (err instanceof ApiError && err.status === 404) {
+            setNotFound(true);
+          } else {
+            setError(err instanceof ApiError ? err.message : 'Unable to load this invitation.');
+          }
         }
       })
       .finally(() => {
@@ -195,7 +176,7 @@ export function PublicInvitationPage() {
     return () => {
       cancelled = true;
     };
-  }, [slug, accessToken]);
+  }, [slug]);
 
   const sections = useMemo(
     () => [...(page?.invitation.sections ?? [])].sort((a, b) => a.sortOrder - b.sortOrder),
@@ -208,6 +189,10 @@ export function PublicInvitationPage() {
         <p className="font-body text-sm text-[#6d625a]">Loading invitation...</p>
       </div>
     );
+  }
+
+  if (notFound) {
+    return <InvitationNotAvailable />;
   }
 
   if (error || !page) {
@@ -224,7 +209,7 @@ export function PublicInvitationPage() {
   return (
     <div className="min-h-screen bg-[#f7f3ee] py-6">
       <div className="mx-auto w-full max-w-md overflow-hidden rounded-[2rem] border-[10px] border-[#1f1b18] bg-white shadow-[0_20px_60px_rgba(0,0,0,0.12)]">
-        {sections.map((section) => renderSection(section, page.invitation, accessToken, page))}
+        {sections.map((section) => renderSection(section, page.invitation, slug))}
       </div>
     </div>
   );

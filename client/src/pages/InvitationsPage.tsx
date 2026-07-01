@@ -1,14 +1,27 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Eye, Mail, MoreVertical, Plus } from 'lucide-react';
+import { Eye, Mail, Plus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { listInvitations } from '@/api/invitations';
+import {
+  deleteInvitation,
+  duplicateInvitation,
+  listInvitations,
+  unpublishInvitation,
+} from '@/api/invitations';
 import { listTemplates } from '@/api/templates';
 import { DashboardLayout } from '@/app/layouts/DashboardLayout';
 import { CreateInvitationModal } from '@/components/invitations/CreateInvitationModal';
+import {
+  InvitationCardMenu,
+  type InvitationCardMenuAction,
+} from '@/components/invitations/InvitationCardMenu';
+import { PublishSuccessModal } from '@/components/invitations/PublishSuccessModal';
 import { DashboardMessage } from '@/components/dashboard/DashboardMessage';
 import { EventSelector, eventDisplayName } from '@/components/dashboard/EventSelector';
+import { Toast } from '@/components/ui/Toast';
 import { useSelectedEvent } from '@/hooks/useSelectedEvent';
+import { useToast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/api';
+import { resolvePublicInviteUrl } from '@/lib/invitationUrls';
 import {
   invitationCardImage,
   invitationDisplayTitle,
@@ -16,6 +29,7 @@ import {
   invitationSubtitle,
   STATUS_FILTER_OPTIONS,
   statusBadgeClass,
+  statusLabel,
 } from '@/lib/invitations';
 import { cn } from '@/lib/utils';
 import type { Invitation, InvitationStatus, InvitationTemplate } from '@/types/api';
@@ -60,12 +74,22 @@ function StatusBadge({ status }: { status: InvitationStatus }) {
         statusBadgeClass(status),
       )}
     >
-      {status}
+      {statusLabel(status)}
     </span>
   );
 }
 
-function InvitationCard({ invitation, index }: { invitation: Invitation; index: number }) {
+function InvitationCard({
+  invitation,
+  index,
+  onMenuAction,
+  onCopySuccess,
+}: {
+  invitation: Invitation;
+  index: number;
+  onMenuAction: (invitation: Invitation, action: InvitationCardMenuAction) => void;
+  onCopySuccess: () => void;
+}) {
   const views = Number(invitation.viewCount) || 0;
   const responses = invitation._count?.rsvps ?? 0;
 
@@ -94,13 +118,11 @@ function InvitationCard({ invitation, index }: { invitation: Invitation; index: 
             </Link>
             <p className="mt-1 font-body text-sm text-[#9e8e82]">{invitationSubtitle(invitation)}</p>
           </div>
-          <button
-            type="button"
-            className="shrink-0 rounded-lg p-1.5 text-[#9e8e82] transition-colors hover:bg-[#faf7f2] hover:text-[#4e342e]"
-            aria-label={`Options for ${invitationDisplayTitle(invitation)}`}
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
+          <InvitationCardMenu
+            invitation={invitation}
+            onAction={(action) => onMenuAction(invitation, action)}
+            onCopySuccess={onCopySuccess}
+          />
         </div>
 
         <div className="mt-4 flex items-center justify-between border-t border-[#f0e6e1] pt-4 font-body text-xs text-[#9e8e82]">
@@ -141,6 +163,7 @@ function CreateSuiteCard({ onClick }: { onClick: () => void }) {
 
 export function InvitationsPage() {
   const navigate = useNavigate();
+  const { toast, showToast } = useToast();
   const {
     events,
     eventId,
@@ -157,6 +180,8 @@ export function InvitationsPage() {
   const [statusFilter, setStatusFilter] = useState('');
   const [templateFilter, setTemplateFilter] = useState('');
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [shareInvitation, setShareInvitation] = useState<Invitation | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const loadInvitations = useCallback(async () => {
     if (!eventId) {
@@ -206,8 +231,83 @@ export function InvitationsPage() {
     });
   }
 
+  async function handleCardMenuAction(invitation: Invitation, action: InvitationCardMenuAction) {
+    if (!eventId || actionLoading) return;
+
+    switch (action) {
+      case 'open': {
+        const url = resolvePublicInviteUrl(invitation.slug);
+        window.open(url, '_blank', 'noopener,noreferrer');
+        return;
+      }
+      case 'share':
+        setShareInvitation(invitation);
+        return;
+      case 'unpublish': {
+        if (!window.confirm('Unpublish this invitation? Guests will no longer be able to view it.')) {
+          return;
+        }
+        try {
+          setActionLoading(true);
+          await unpublishInvitation(eventId, invitation.id);
+          showToast('Invitation unpublished.');
+          await loadInvitations();
+        } catch (err) {
+          showToast(err instanceof ApiError ? err.message : 'Failed to unpublish invitation.');
+        } finally {
+          setActionLoading(false);
+        }
+        return;
+      }
+      case 'duplicate': {
+        try {
+          setActionLoading(true);
+          const copy = await duplicateInvitation(eventId, invitation.id);
+          showToast('Invitation duplicated.');
+          navigate(`/dashboard/invitations/${copy.id}/edit`, { state: { eventId } });
+        } catch (err) {
+          showToast(err instanceof ApiError ? err.message : 'Failed to duplicate invitation.');
+        } finally {
+          setActionLoading(false);
+        }
+        return;
+      }
+      case 'delete': {
+        if (!window.confirm('Delete this invitation suite? This cannot be undone.')) {
+          return;
+        }
+        try {
+          setActionLoading(true);
+          await deleteInvitation(eventId, invitation.id);
+          showToast('Invitation deleted.');
+          await loadInvitations();
+        } catch (err) {
+          showToast(err instanceof ApiError ? err.message : 'Failed to delete invitation.');
+        } finally {
+          setActionLoading(false);
+        }
+        return;
+      }
+      default:
+        return;
+    }
+  }
+
   return (
     <DashboardLayout headerVariant="search">
+      <Toast message={toast} />
+
+      {shareInvitation && (
+        <PublishSuccessModal
+          open
+          variant="share"
+          publicUrl={resolvePublicInviteUrl(shareInvitation.slug)}
+          slug={shareInvitation.slug}
+          onClose={() => setShareInvitation(null)}
+          onCopySuccess={() => showToast('Invitation link copied.')}
+        />
+      )}
+
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div className="max-w-2xl">
           <h1 className="font-display text-3xl text-[#4e342e] md:text-4xl">Digital Invitations</h1>
@@ -277,7 +377,13 @@ export function InvitationsPage() {
         <section className="mt-8 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
           <CreateSuiteCard onClick={() => setShowCreateModal(true)} />
           {invitations.map((invitation, index) => (
-            <InvitationCard key={invitation.id} invitation={invitation} index={index} />
+            <InvitationCard
+              key={invitation.id}
+              invitation={invitation}
+              index={index}
+              onMenuAction={handleCardMenuAction}
+              onCopySuccess={() => showToast('Invitation link copied.')}
+            />
           ))}
         </section>
       )}

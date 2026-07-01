@@ -122,6 +122,74 @@ export class GuestRepository {
     });
   }
 
+  async findManyByIds(eventId, guestIds) {
+    return this.db.guest.findMany({
+      where: { eventId, deletedAt: null, id: { in: guestIds } },
+      include: GUEST_INCLUDE,
+    });
+  }
+
+  async markInviteSent(guestId) {
+    const now = new Date();
+    return this.db.guest.update({
+      where: { id: guestId },
+      data: {
+        inviteSentAt: now,
+        inviteStatus: 'sent',
+      },
+      include: GUEST_INCLUDE,
+    });
+  }
+
+  async recordInviteOpened(guestId) {
+    const guest = await this.db.guest.findUnique({ where: { id: guestId } });
+    if (!guest || guest.inviteStatus === 'responded') return guest;
+
+    const now = new Date();
+    return this.db.guest.update({
+      where: { id: guestId },
+      data: {
+        inviteOpenedAt: guest.inviteOpenedAt ?? now,
+        inviteStatus: guest.inviteStatus === 'responded' ? 'responded' : 'opened',
+      },
+    });
+  }
+
+  async recordInviteResponded(guestId, respondedAt = new Date()) {
+    const guest = await this.db.guest.findUnique({ where: { id: guestId } });
+    return this.db.guest.update({
+      where: { id: guestId },
+      data: {
+        respondedAt,
+        inviteStatus: 'responded',
+        inviteOpenedAt: guest?.inviteOpenedAt ?? respondedAt,
+      },
+    });
+  }
+
+  async getInviteAnalytics(eventId) {
+    const groups = await this.db.guest.groupBy({
+      by: ['inviteStatus'],
+      where: { eventId, deletedAt: null },
+      _count: { id: true },
+    });
+
+    const stats = {
+      total: 0,
+      not_sent: 0,
+      sent: 0,
+      opened: 0,
+      responded: 0,
+    };
+
+    for (const group of groups) {
+      stats[group.inviteStatus] = group._count.id;
+      stats.total += group._count.id;
+    }
+
+    return stats;
+  }
+
   async softDelete(guestId) {
     return this.db.guest.update({
       where: { id: guestId },

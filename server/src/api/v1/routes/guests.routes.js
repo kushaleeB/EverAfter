@@ -12,6 +12,8 @@ import {
   updateGuestSchema,
   guestIdParamSchema,
   guestQrQuerySchema,
+  sendInvitationBodySchema,
+  sendBulkInvitationsBodySchema,
 } from '../../../validators/guest.validator.js';
 import * as guestController from '../../../controllers/guest.controller.js';
 
@@ -43,6 +45,20 @@ router.get(
   validateMultiple({ params: eventParams, query: listGuestsQuerySchema }),
   requireEventAccess(PERMISSIONS.RSVP_READ),
   asyncHandler(guestController.rsvpTracking),
+);
+
+router.get(
+  '/invitation-analytics',
+  validateMultiple({ params: eventParams }),
+  requireEventAccess(PERMISSIONS.RSVP_READ),
+  asyncHandler(guestController.invitationAnalytics),
+);
+
+router.post(
+  '/send-bulk',
+  validateMultiple({ params: eventParams, body: sendBulkInvitationsBodySchema }),
+  requireEventAccess(PERMISSIONS.GUEST_WRITE),
+  asyncHandler(guestController.sendBulkInvitations),
 );
 
 router.post(
@@ -98,6 +114,13 @@ router.get(
   validateMultiple({ params: guestParams, query: guestQrQuerySchema }),
   requireEventAccess(PERMISSIONS.GUEST_READ),
   asyncHandler(guestController.generateQr),
+);
+
+router.post(
+  '/:guestId/send-invitation',
+  validateMultiple({ params: guestParams, body: sendInvitationBodySchema }),
+  requireEventAccess(PERMISSIONS.GUEST_WRITE),
+  asyncHandler(guestController.sendInvitation),
 );
 
 router.post(

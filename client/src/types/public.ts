@@ -4,10 +4,21 @@ export interface PublicGuest {
   id: string;
   firstName: string;
   lastName: string;
-  email: string | null;
+  email?: string | null;
   partySize: number;
   plusOneAllowed: boolean;
   category: string;
+}
+
+export type PublicGuestSearchResult = PublicGuest;
+
+export interface PublicGuestRsvpState {
+  guest: PublicGuest;
+  rsvp: {
+    status: string;
+    attendingCount: number;
+    respondedAt: string | null;
+  };
 }
 
 export interface PublicInvitationPage {
@@ -35,7 +46,8 @@ export interface GuestQrData {
 }
 
 export interface SubmitRsvpPayload {
-  accessToken: string;
+  accessToken?: string;
+  guestId?: string;
   status: 'attending' | 'declined' | 'maybe';
   attendingCount: number;
   dietaryNotes?: string;
@@ -45,6 +57,8 @@ export interface SubmitRsvpPayload {
 export interface SubmitRsvpResult {
   rsvp: Rsvp;
   message: string;
+  accessToken?: string;
+  guest?: PublicGuest;
 }
 
 export interface PublicRsvpSectionProps {

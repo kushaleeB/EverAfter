@@ -1,4 +1,5 @@
 import type { Invitation, InvitationSection } from '@/types/api';
+import { resolveOptionalMediaUrl } from '@/lib/mediaUrl';
 
 export type BackgroundPosition = 'center' | 'top' | 'bottom';
 export type BackgroundSize = 'cover' | 'contain';
@@ -108,12 +109,13 @@ export function parseHeroDetails(
   const eventDate = event?.eventDate ? event.eventDate.slice(0, 10) : '';
 
   const imageUrlRaw = content.imageUrl;
-  const imageUrl =
+  const imageUrl = resolveOptionalMediaUrl(
     imageUrlRaw === null
       ? null
       : typeof imageUrlRaw === 'string' && imageUrlRaw.length > 0
         ? imageUrlRaw
-        : event?.coverImageUrl ?? DEFAULT_HERO_DETAILS.imageUrl;
+        : event?.coverImageUrl ?? DEFAULT_HERO_DETAILS.imageUrl,
+  );
 
   return {
     imageUrl,

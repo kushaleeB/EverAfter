@@ -91,6 +91,49 @@ export class RsvpRepository {
     });
   }
 
+  async findGuestByIdForEvent(eventId, guestId) {
+    return this.db.guest.findFirst({
+      where: { id: guestId, eventId, deletedAt: null },
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        email: true,
+        partySize: true,
+        plusOneAllowed: true,
+        category: true,
+        accessToken: true,
+      },
+    });
+  }
+
+  async searchGuestsForEvent(eventId, search = '') {
+    const where = { eventId, deletedAt: null };
+    const term = search?.trim();
+
+    if (term) {
+      where.OR = [
+        { firstName: { contains: term, mode: 'insensitive' } },
+        { lastName: { contains: term, mode: 'insensitive' } },
+        { email: { contains: term, mode: 'insensitive' } },
+      ];
+    }
+
+    return this.db.guest.findMany({
+      where,
+      select: {
+        id: true,
+        firstName: true,
+        lastName: true,
+        partySize: true,
+        plusOneAllowed: true,
+        category: true,
+      },
+      orderBy: [{ lastName: 'asc' }, { firstName: 'asc' }],
+      take: term ? 20 : 50,
+    });
+  }
+
   async findByGuestAndInvitation(guestId, invitationId) {
     return this.db.rsvp.findUnique({
       where: { guestId_invitationId: { guestId, invitationId } },

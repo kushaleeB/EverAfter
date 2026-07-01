@@ -1,11 +1,14 @@
 import { apiRequest, apiRequestWithMeta, apiUpload } from '@/lib/api';
 import type {
+  BulkSendInvitationResult,
   CategoryOption,
   CreateGuestPayload,
   Guest,
   GuestCategory,
+  InvitationAnalytics,
   RsvpStatus,
   RsvpSummary,
+  SendInvitationResult,
 } from '@/types/api';
 
 export interface ListGuestsParams {
@@ -84,4 +87,32 @@ export function markInviteSent(eventId: string, guestId: string) {
   return apiRequest<Guest>(`/events/${eventId}/guests/${guestId}/mark-invite-sent`, {
     method: 'POST',
   });
+}
+
+export function sendGuestInvitation(
+  eventId: string,
+  guestId: string,
+  payload: { channel?: 'email' | 'link' | 'whatsapp'; invitationId?: string } = {},
+) {
+  return apiRequest<SendInvitationResult>(
+    `/events/${eventId}/guests/${guestId}/send-invitation`,
+    {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    },
+  );
+}
+
+export function sendBulkGuestInvitations(
+  eventId: string,
+  payload: { guestIds: string[]; channel?: 'email' | 'link' | 'whatsapp'; invitationId?: string },
+) {
+  return apiRequest<BulkSendInvitationResult>(`/events/${eventId}/guests/send-bulk`, {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
+export function getInvitationAnalytics(eventId: string) {
+  return apiRequest<InvitationAnalytics>(`/events/${eventId}/guests/invitation-analytics`);
 }
