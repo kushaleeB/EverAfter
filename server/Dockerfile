@@ -7,10 +7,8 @@ RUN apt-get update -y \
   && rm -rf /var/lib/apt/lists/*
 
 COPY package.json ./
-RUN npm install
-
 COPY prisma ./prisma
-RUN npx prisma generate
+RUN npm install
 
 COPY src ./src
 COPY templates ./templates
