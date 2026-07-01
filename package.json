@@ -19,6 +19,7 @@
     "build": "npm run build -w @everafter/client",
     "build:client": "npm run build -w @everafter/client",
     "start": "npm run start -w @everafter/server",
+    "start:client": "npm run start -w @everafter/client",
     "lint": "npm run lint -w @everafter/client",
     "db:generate": "npm run db:generate -w @everafter/server",
     "db:pull": "npm run db:pull -w @everafter/server",
