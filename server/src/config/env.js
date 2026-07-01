@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { z } from 'zod';
+import { isSupabaseDirectUrl, normalizeDatabaseUrl } from '../lib/databaseUrl.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../../.env') });
@@ -55,6 +56,19 @@ if (!parsed.success) {
 }
 
 const env = parsed.data;
+const rawDatabaseUrl = env.DATABASE_URL || env.SUPABASE_URL;
+const databaseUrl = normalizeDatabaseUrl(rawDatabaseUrl);
+
+if (databaseUrl) {
+  process.env.DATABASE_URL = databaseUrl;
+}
+
+if (env.NODE_ENV === 'production' && isSupabaseDirectUrl(databaseUrl)) {
+  console.warn(
+    '[env] DATABASE_URL uses Supabase direct host (db.*.supabase.co). ' +
+      'Railway often cannot reach it — use the Session pooler URI from Supabase → Database → Connection string.',
+  );
+}
 
 function parseCorsOrigins(value) {
   return value
@@ -76,11 +90,8 @@ function deriveSupabaseProjectUrl(databaseUrl, explicitUrl) {
 
 export default {
   ...env,
-  databaseUrl: env.DATABASE_URL || env.SUPABASE_URL,
-  supabaseProjectUrl: deriveSupabaseProjectUrl(
-    env.DATABASE_URL || env.SUPABASE_URL,
-    env.SUPABASE_PROJECT_URL,
-  ),
+  databaseUrl,
+  supabaseProjectUrl: deriveSupabaseProjectUrl(databaseUrl, env.SUPABASE_PROJECT_URL),
   corsOrigins: parseCorsOrigins(env.CORS_ORIGIN),
   isProduction: env.NODE_ENV === 'production',
   maxFileSizeBytes: env.MAX_FILE_SIZE_MB * 1024 * 1024,

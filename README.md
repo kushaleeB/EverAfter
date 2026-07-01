@@ -110,14 +110,19 @@ The Express backend is configured for [Railway](https://railway.app) in `server/
 The React app is configured in `client/` (`Dockerfile`, `railway.toml`).
 
 1. In the same Railway project, add a **second service** from the same GitHub repo.
-2. Set **Root Directory** to `client`.
-3. Add build-time variable:
+2. **Settings → Root Directory** must be exactly `client` (the folder).
+   - **Wrong:** `client/Dockerfile` — Railway treats `Dockerfile` as a folder and the build fails.
+3. **Settings → Build → Builder** should be **Dockerfile** (from `client/railway.toml`).
+4. **Settings → Deploy → Custom Start Command** — leave **empty** (do not use `npm run dev`).
+5. **Settings → Networking → Public domain → Port** must be **`${{PORT}}`** (or delete and re-add the domain).
+   - **Wrong:** `5173` — that is the Vite dev port; production listens on Railway's `PORT` (e.g. `8080`).
+6. Add build-time variable:
    - `VITE_API_BASE_URL=https://<your-api-railway-url>/api/v1`
-4. Generate a **public domain** for the frontend service.
-5. Update the **backend** `APP_URL` and `CORS_ORIGIN` to the frontend Railway URL.
-6. Redeploy both services after env changes.
+7. Generate a **public domain** for the frontend service (if not already).
+8. Update the **backend** `APP_URL` and `CORS_ORIGIN` to the frontend Railway URL.
+9. Redeploy after any settings change.
 
-The frontend container serves `dist/` with `serve` on Railway's `PORT` (fixes 502 from missing/wrong start command).
+The frontend container serves `dist/` with `serve` on Railway's `PORT`.
 
 **Note:** Uploaded files are stored on the container disk and reset on redeploy. For production, plan to move media to Supabase Storage or S3.
 

@@ -20,6 +20,7 @@ export function errorHandler(err, req, res, _next) {
       error = new AppError('Database operation failed', 500, ErrorCodes.INTERNAL_ERROR);
     }
   } else if (err instanceof Prisma.PrismaClientInitializationError) {
+    console.error(`[${req.requestId}] Database connection failed:`, err.message);
     error = new AppError('Database unavailable. Please try again.', 503, ErrorCodes.INTERNAL_ERROR);
   }
 
