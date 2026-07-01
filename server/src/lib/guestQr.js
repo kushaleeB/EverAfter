@@ -20,6 +20,16 @@ export function buildCheckInQrText(guest, invitation) {
   return JSON.stringify(buildCheckInQrPayload(guest, invitation));
 }
 
+/** Public API shape — never expose raw accessToken in JSON responses. */
+export function toPublicGuestQrResponse(result) {
+  return {
+    dataUrl: result.dataUrl,
+    rsvpUrl: result.rsvpUrl,
+    guest: result.guest,
+    invitation: result.invitation,
+  };
+}
+
 export async function generateGuestQrResult(guest, invitation, format = 'dataurl') {
   const rsvpUrl = buildRsvpUrl(invitation, guest);
   const qrText = buildCheckInQrText(guest, invitation);
@@ -42,6 +52,5 @@ export async function generateGuestQrResult(guest, invitation, format = 'dataurl
       id: invitation.id,
       slug: invitation.slug,
     },
-    checkInPayload: buildCheckInQrPayload(guest, invitation),
   };
 }

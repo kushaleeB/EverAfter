@@ -23,7 +23,7 @@ export const publicApi = {
   getGuestQr(slug: string, accessToken: string) {
     const params = new URLSearchParams({ accessToken });
     return apiRequest<GuestQrData>(
-      `/public/invitations/${slug}/qr?${params.toString()}`,
+      `/public/invitations/${encodeURIComponent(slug)}/qr?${params.toString()}`,
       {},
       { skipAuthRetry: true },
     );

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { asyncHandler } from '../../../utils/asyncHandler.js';
 import { validate, validateMultiple } from '../../../middleware/validate.middleware.js';
-import { authRateLimiter } from '../../../middleware/rateLimit.middleware.js';
+import { authRateLimiter, publicGuestRateLimiter } from '../../../middleware/rateLimit.middleware.js';
 import {
   publicSlugParamSchema,
   accessTokenQuerySchema,
@@ -33,12 +33,14 @@ router.get(
 // Guest RSVP flow
 router.get(
   '/invitations/:slug/qr',
+  publicGuestRateLimiter,
   validateMultiple({ params: publicSlugParamSchema, query: accessTokenQuerySchema }),
   asyncHandler(rsvpController.getPublicGuestQr),
 );
 
 router.get(
   '/invitations/:slug/rsvp',
+  publicGuestRateLimiter,
   validateMultiple({ params: publicSlugParamSchema, query: accessTokenQuerySchema }),
   asyncHandler(rsvpController.getGuestRsvp),
 );

@@ -32,13 +32,6 @@ export interface GuestQrData {
   rsvpUrl: string;
   guest: GuestQrGuest;
   invitation: GuestQrInvitation;
-  checkInPayload?: {
-    v: number;
-    guestId: string;
-    eventId: string;
-    invitationId: string;
-    accessToken: string;
-  };
 }
 
 export interface SubmitRsvpPayload {

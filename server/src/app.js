@@ -15,7 +15,9 @@ const app = express();
 app.set('trust proxy', 1);
 
 app.use(requestId);
-app.use(helmet());
+  app.use(helmet({
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+  }));
 app.use(compression());
 app.use(
   cors({

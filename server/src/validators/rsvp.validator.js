@@ -2,19 +2,25 @@ import { z } from 'zod';
 
 const rsvpStatusEnum = z.enum(['attending', 'declined', 'maybe']);
 
+/** Guest invite link token — 64-char hex in production; seed tokens may be longer labels. */
+export const guestAccessTokenSchema = z.string().trim().min(16).max(128);
+
 export const accessTokenQuerySchema = z.object({
-  accessToken: z.string().min(1),
+  token: guestAccessTokenSchema.optional(),
+  accessToken: guestAccessTokenSchema.optional(),
+}).refine((data) => Boolean(data.token || data.accessToken), {
+  message: 'accessToken is required',
 });
 
 export const publicPageQuerySchema = z.object({
-  token: z.string().min(1).optional(),
-  accessToken: z.string().min(1).optional(),
+  token: guestAccessTokenSchema.optional(),
+  accessToken: guestAccessTokenSchema.optional(),
 }).refine((d) => d.token || d.accessToken, {
   message: 'token or accessToken is required for guest context',
 });
 
 export const submitRsvpSchema = z.object({
-  accessToken: z.string().min(1),
+  accessToken: guestAccessTokenSchema,
   status: rsvpStatusEnum,
   attendingCount: z.number().int().min(0).max(20).default(0),
   dietaryNotes: z.string().max(500).optional(),
@@ -22,7 +28,7 @@ export const submitRsvpSchema = z.object({
 });
 
 export const updateRsvpSchema = z.object({
-  accessToken: z.string().min(1),
+  accessToken: guestAccessTokenSchema,
   status: rsvpStatusEnum.optional(),
   attendingCount: z.number().int().min(0).max(20).optional(),
   dietaryNotes: z.string().max(500).optional(),

@@ -1,6 +1,6 @@
 import rsvpRepository from '../repositories/rsvp.repository.js';
 import { serializeInvitation } from '../utils/serialize.js';
-import { generateGuestQrResult } from '../lib/guestQr.js';
+import { generateGuestQrResult, toPublicGuestQrResponse } from '../lib/guestQr.js';
 import { parsePagination, buildPaginationMeta } from '../utils/pagination.js';
 import { AppError } from '../errors/AppError.js';
 
@@ -142,7 +142,14 @@ export class RsvpService {
 
   async getPublicGuestQr(slug, accessToken) {
     const { invitation, guest } = await this._resolveGuestAndInvitation(slug, accessToken);
-    return generateGuestQrResult(guest, invitation);
+
+    const rsvp = await this.repo.findByGuestAndInvitation(guest.id, invitation.id);
+    if (!rsvp?.respondedAt) {
+      throw AppError.forbidden('Complete your RSVP before generating a guest pass');
+    }
+
+    const result = await generateGuestQrResult(guest, invitation);
+    return toPublicGuestQrResponse(result);
   }
 
   async submitRsvp(slug, data, meta = {}) {

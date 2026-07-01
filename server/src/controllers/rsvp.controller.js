@@ -6,22 +6,24 @@ import { sendSuccess, sendCreated } from '../utils/response.js';
 export const getPublicPage = async (req, res) => {
   const token = req.query.token || req.query.accessToken;
   const page = await rsvpService.getPublicPage(req.params.slug, token);
+  if (token) {
+    res.setHeader('Cache-Control', 'no-store, private');
+  }
   sendSuccess(res, page);
 };
 
 export const getGuestRsvp = async (req, res) => {
-  const result = await rsvpService.getGuestRsvp(
-    req.params.slug,
-    req.query.accessToken,
-  );
+  const accessToken = req.query.accessToken || req.query.token;
+  const result = await rsvpService.getGuestRsvp(req.params.slug, accessToken);
+  res.setHeader('Cache-Control', 'no-store, private');
   sendSuccess(res, result);
 };
 
 export const getPublicGuestQr = async (req, res) => {
-  const result = await rsvpService.getPublicGuestQr(
-    req.params.slug,
-    req.query.accessToken,
-  );
+  const accessToken = req.query.accessToken || req.query.token;
+  const result = await rsvpService.getPublicGuestQr(req.params.slug, accessToken);
+  res.setHeader('Cache-Control', 'no-store, private');
+  res.setHeader('Pragma', 'no-cache');
   sendSuccess(res, result);
 };
 
