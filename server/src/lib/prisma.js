@@ -11,11 +11,14 @@ if (env.databaseUrl) {
   prismaOptions.datasources = { db: { url: env.databaseUrl } };
 }
 
-const prisma =
-  globalForPrisma.prisma ?? new PrismaClient(prismaOptions);
+const prisma = globalForPrisma.prisma ?? new PrismaClient(prismaOptions);
 
 if (!env.isProduction) {
   globalForPrisma.prisma = prisma;
+}
+
+export async function connectPrisma() {
+  await prisma.$connect();
 }
 
 export default prisma;

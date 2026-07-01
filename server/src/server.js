@@ -12,7 +12,17 @@ if (!process.env.DATABASE_URL && process.env.SUPABASE_URL?.startsWith('postgresq
 
 const { default: app } = await import('./app.js');
 const { default: env } = await import('./config/env.js');
-const { default: prisma } = await import('./lib/prisma.js');
+const { default: prisma, connectPrisma } = await import('./lib/prisma.js');
+
+try {
+  await connectPrisma();
+  console.log('Prisma connected to PostgreSQL');
+} catch (err) {
+  console.error('Prisma failed to connect to PostgreSQL:', err.message);
+  if (env.isProduction) {
+    process.exit(1);
+  }
+}
 
 const PORT = env.PORT;
 const HOST = '0.0.0.0';

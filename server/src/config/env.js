@@ -2,7 +2,12 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 import { dirname, resolve } from 'path';
 import { z } from 'zod';
-import { isSupabaseDirectUrl, normalizeDatabaseUrl } from '../lib/databaseUrl.js';
+import {
+  deriveSupabaseProjectUrl,
+  isSupabaseDirectUrl,
+  isSupabasePoolerUrl,
+  normalizeDatabaseUrl,
+} from '../lib/databaseUrl.js';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: resolve(__dirname, '../../../.env') });
@@ -13,6 +18,7 @@ const envSchema = z
     NODE_ENV: z.enum(['development', 'production', 'test']).default('development'),
     PORT: z.coerce.number().default(3001),
     DATABASE_URL: z.string().min(1).optional(),
+    DIRECT_URL: z.string().min(1).optional(),
     SUPABASE_URL: z.string().optional(),
     JWT_ACCESS_SECRET: z.string().min(32).default('dev-access-secret-change-in-production-32chars'),
     JWT_REFRESH_SECRET: z.string().min(32).default('dev-refresh-secret-change-in-production-32ch'),
@@ -58,15 +64,26 @@ if (!parsed.success) {
 const env = parsed.data;
 const rawDatabaseUrl = env.DATABASE_URL || env.SUPABASE_URL;
 const databaseUrl = normalizeDatabaseUrl(rawDatabaseUrl);
+const directDatabaseUrl = normalizeDatabaseUrl(env.DIRECT_URL || rawDatabaseUrl);
 
 if (databaseUrl) {
   process.env.DATABASE_URL = databaseUrl;
 }
 
+if (directDatabaseUrl) {
+  process.env.DIRECT_URL = directDatabaseUrl;
+}
+
 if (env.NODE_ENV === 'production' && isSupabaseDirectUrl(databaseUrl)) {
   console.warn(
     '[env] DATABASE_URL uses Supabase direct host (db.*.supabase.co). ' +
-      'Railway often cannot reach it — use the Session pooler URI from Supabase → Database → Connection string.',
+      'Use the pooler URI from Supabase → Database → Connection string (Prisma ORM tab).',
+  );
+}
+
+if (env.NODE_ENV === 'production' && databaseUrl && !isSupabasePoolerUrl(databaseUrl)) {
+  console.warn(
+    '[env] DATABASE_URL is not using pooler.supabase.com. Railway may fail to connect.',
   );
 }
 
@@ -77,20 +94,10 @@ function parseCorsOrigins(value) {
     .filter(Boolean);
 }
 
-function deriveSupabaseProjectUrl(databaseUrl, explicitUrl) {
-  if (explicitUrl?.startsWith('https://')) {
-    return explicitUrl.replace(/\/$/, '');
-  }
-  const match = databaseUrl?.match(/@db\.([^.]+)\.supabase\.co/);
-  if (match) {
-    return `https://${match[1]}.supabase.co`;
-  }
-  return undefined;
-}
-
 export default {
   ...env,
   databaseUrl,
+  directDatabaseUrl,
   supabaseProjectUrl: deriveSupabaseProjectUrl(databaseUrl, env.SUPABASE_PROJECT_URL),
   corsOrigins: parseCorsOrigins(env.CORS_ORIGIN),
   isProduction: env.NODE_ENV === 'production',
