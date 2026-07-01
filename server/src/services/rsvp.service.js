@@ -1,5 +1,6 @@
 import rsvpRepository from '../repositories/rsvp.repository.js';
 import { serializeInvitation } from '../utils/serialize.js';
+import { generateGuestQrResult } from '../lib/guestQr.js';
 import { parsePagination, buildPaginationMeta } from '../utils/pagination.js';
 import { AppError } from '../errors/AppError.js';
 
@@ -137,6 +138,11 @@ export class RsvpService {
       rsvp: rsvp ?? { status: 'pending', attendingCount: 0 },
       invitation: { id: invitation.id, slug: invitation.slug, rsvpDeadline: invitation.rsvpDeadline },
     };
+  }
+
+  async getPublicGuestQr(slug, accessToken) {
+    const { invitation, guest } = await this._resolveGuestAndInvitation(slug, accessToken);
+    return generateGuestQrResult(guest, invitation);
   }
 
   async submitRsvp(slug, data, meta = {}) {

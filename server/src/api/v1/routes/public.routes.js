@@ -32,6 +32,12 @@ router.get(
 
 // Guest RSVP flow
 router.get(
+  '/invitations/:slug/qr',
+  validateMultiple({ params: publicSlugParamSchema, query: accessTokenQuerySchema }),
+  asyncHandler(rsvpController.getPublicGuestQr),
+);
+
+router.get(
   '/invitations/:slug/rsvp',
   validateMultiple({ params: publicSlugParamSchema, query: accessTokenQuerySchema }),
   asyncHandler(rsvpController.getGuestRsvp),

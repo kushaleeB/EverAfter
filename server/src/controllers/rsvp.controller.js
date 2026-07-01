@@ -17,6 +17,14 @@ export const getGuestRsvp = async (req, res) => {
   sendSuccess(res, result);
 };
 
+export const getPublicGuestQr = async (req, res) => {
+  const result = await rsvpService.getPublicGuestQr(
+    req.params.slug,
+    req.query.accessToken,
+  );
+  sendSuccess(res, result);
+};
+
 export const submitRsvp = async (req, res) => {
   const result = await rsvpService.submitRsvp(req.params.slug, req.body, {
     ipAddress: req.ip,

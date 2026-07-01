@@ -20,6 +20,7 @@ import { MediaPage } from '@/pages/MediaPage';
 import { GuestsPage } from '@/pages/GuestsPage';
 import { RSVPsPage } from '@/pages/RSVPsPage';
 import { SettingsPage } from '@/pages/SettingsPage';
+import { PublicInvitationPage } from '@/pages/PublicInvitationPage';
 
 export default function App() {
   return (
@@ -32,6 +33,7 @@ export default function App() {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/stories" element={<StoriesPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/invite/:slug" element={<PublicInvitationPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
             path="/signup"

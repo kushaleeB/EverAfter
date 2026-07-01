@@ -1,8 +1,7 @@
 import guestRepository from '../repositories/guest.repository.js';
 import { parseGuestCsv, GUEST_CATEGORY_LABELS } from '../lib/csv.js';
-import { generateQrDataUrl, generateQrBuffer } from '../lib/qr.js';
+import { generateGuestQrResult } from '../lib/guestQr.js';
 import { parsePagination, buildPaginationMeta } from '../utils/pagination.js';
-import env from '../config/env.js';
 import { AppError } from '../errors/AppError.js';
 
 const SORTABLE_FIELDS = ['lastName', 'firstName', 'createdAt', 'category', 'inviteSentAt'];
@@ -193,27 +192,7 @@ export class GuestService {
       throw AppError.badRequest('No published invitation found for this event');
     }
 
-    const rsvpUrl = `${env.APP_URL}/invite/${invitation.slug}?token=${guest.accessToken}`;
-
-    if (format === 'png') {
-      const buffer = await generateQrBuffer(rsvpUrl);
-      return { buffer, rsvpUrl, contentType: 'image/png' };
-    }
-
-    const dataUrl = await generateQrDataUrl(rsvpUrl);
-    return {
-      dataUrl,
-      rsvpUrl,
-      guest: {
-        id: guest.id,
-        firstName: guest.firstName,
-        lastName: guest.lastName,
-      },
-      invitation: {
-        id: invitation.id,
-        slug: invitation.slug,
-      },
-    };
+    return generateGuestQrResult(guest, invitation, format);
   }
 
   async markInviteSent(eventId, guestId) {
