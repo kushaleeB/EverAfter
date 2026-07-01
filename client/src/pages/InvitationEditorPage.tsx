@@ -21,6 +21,7 @@ import type { StoryEditorChange, StoryImageUploadTarget } from '@/components/inv
 import { Button } from '@/components/ui/button';
 import { eventDisplayName } from '@/components/dashboard/EventSelector';
 import { ApiError } from '@/lib/api';
+import { API_BASE } from '@/lib/apiBase';
 import type { HeroEditorChange } from '@/components/invitations/HeroSectionEditor';
 import { heroDetailsToContent, parseHeroDetails, validateHeroDetails } from '@/lib/heroSection';
 import {
@@ -916,7 +917,7 @@ export function InvitationEditorPage() {
             type="button"
             variant="ghost"
             className="h-9 gap-2 border border-[#e8dfd6] px-4 font-body text-sm text-[#4e342e]"
-            onClick={() => window.open(`/api/v1/public/invitations/${invitation.slug}`, '_blank')}
+            onClick={() => window.open(`${API_BASE}/public/invitations/${invitation.slug}`, '_blank')}
           >
             <Eye className="h-4 w-4" />
             Preview

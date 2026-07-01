@@ -1,8 +1,15 @@
 import path from 'path';
+import { mkdirSync, writeFileSync, unlinkSync } from 'fs';
+import { v4 as uuidv4 } from 'uuid';
 import prisma from '../lib/prisma.js';
 import { AppError } from '../errors/AppError.js';
 import env from '../config/env.js';
 import { serializeMediaAsset } from '../utils/serialize.js';
+import {
+  deleteObject,
+  isStorageConfigured,
+  uploadObject,
+} from '../lib/supabaseStorage.js';
 
 const MIME_TO_TYPE = {
   'image/jpeg': 'image',
@@ -12,6 +19,18 @@ const MIME_TO_TYPE = {
   'video/mp4': 'video',
   'application/pdf': 'document',
 };
+
+function buildStorageKey(eventId, filename) {
+  return `events/${eventId}/${filename}`;
+}
+
+function saveLocalFile(filename, buffer) {
+  const uploadDir = path.resolve(process.cwd(), env.UPLOAD_DIR);
+  mkdirSync(uploadDir, { recursive: true });
+  const absolutePath = path.join(uploadDir, filename);
+  writeFileSync(absolutePath, buffer);
+  return `/uploads/${filename}`;
+}
 
 export class MediaService {
   async listByEvent(eventId) {
@@ -23,8 +42,20 @@ export class MediaService {
   }
 
   async upload(eventId, userId, file, invitationId = null) {
-    const storageKey = `events/${eventId}/${file.filename}`;
-    const fileUrl = `/uploads/${file.filename}`;
+    if (!file?.buffer) {
+      throw AppError.badRequest('No file data received');
+    }
+
+    const ext = path.extname(file.originalname).toLowerCase();
+    const filename = `${uuidv4()}${ext}`;
+    const storageKey = buildStorageKey(eventId, filename);
+
+    let fileUrl;
+    if (isStorageConfigured()) {
+      fileUrl = await uploadObject(storageKey, file.buffer, file.mimetype);
+    } else {
+      fileUrl = saveLocalFile(filename, file.buffer);
+    }
 
     const asset = await prisma.mediaAsset.create({
       data: {
@@ -48,14 +79,21 @@ export class MediaService {
     });
     if (!asset) throw AppError.notFound('Media asset');
 
+    if (isStorageConfigured() && asset.storageKey) {
+      await deleteObject(asset.storageKey);
+    } else if (asset.fileUrl?.startsWith('/uploads/')) {
+      const filename = path.basename(asset.fileUrl);
+      try {
+        unlinkSync(path.resolve(process.cwd(), env.UPLOAD_DIR, filename));
+      } catch {
+        // File may already be gone locally.
+      }
+    }
+
     return prisma.mediaAsset.update({
       where: { id: mediaId },
       data: { deletedAt: new Date() },
     });
-  }
-
-  getAbsolutePath(filename) {
-    return path.resolve(process.cwd(), env.UPLOAD_DIR, filename);
   }
 }
 

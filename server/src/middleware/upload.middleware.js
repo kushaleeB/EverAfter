@@ -1,12 +1,6 @@
 import multer from 'multer';
-import path from 'path';
-import { mkdirSync } from 'fs';
-import { v4 as uuidv4 } from 'uuid';
 import env from '../config/env.js';
 import { AppError } from '../errors/AppError.js';
-
-const uploadDir = path.resolve(process.cwd(), env.UPLOAD_DIR);
-mkdirSync(uploadDir, { recursive: true });
 
 const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
@@ -17,13 +11,7 @@ const ALLOWED_MIME_TYPES = new Set([
   'application/pdf',
 ]);
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, `${uuidv4()}${ext}`);
-  },
-});
+const storage = multer.memoryStorage();
 
 function fileFilter(_req, file, cb) {
   if (!ALLOWED_MIME_TYPES.has(file.mimetype)) {

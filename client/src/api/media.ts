@@ -1,9 +1,8 @@
 import { apiUpload, ApiError, isSuccessStatus } from '@/lib/api';
+import { API_BASE, resolveMediaUrl } from '@/lib/apiBase';
 import { getAccessToken } from '@/lib/auth';
 import { refreshAccessToken } from '@/lib/tokenRefresh';
 import { useAuthStore } from '@/stores/authStore';
-
-const API_BASE = '/api/v1';
 
 export interface MediaAsset {
   id: string;
@@ -42,7 +41,7 @@ function normalizeMediaAsset(data: Record<string, unknown>): MediaAsset {
 
   return {
     id: String(data.id),
-    fileUrl: String(fileUrl),
+    fileUrl: resolveMediaUrl(String(fileUrl)),
     fileName: String(fileName ?? 'upload.jpg'),
     mimeType: String(mimeType ?? 'image/jpeg'),
   };

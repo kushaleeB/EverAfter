@@ -1,7 +1,6 @@
 import { getRefreshToken, saveAuthSession } from '@/lib/auth';
 import type { AuthSession } from '@/lib/auth';
-
-const API_BASE = '/api/v1';
+import { API_BASE } from '@/lib/apiBase';
 
 let refreshInFlight: Promise<AuthSession | null> | null = null;
 

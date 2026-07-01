@@ -1,9 +1,8 @@
 import { getAccessToken } from '@/lib/auth';
+import { API_BASE } from '@/lib/apiBase';
 import { refreshAccessToken } from '@/lib/tokenRefresh';
 import { useAuthStore } from '@/stores/authStore';
 import type { PaginationMeta } from '@/types/api';
-
-const API_BASE = '/api/v1';
 
 const AUTH_RETRY_SKIP_PATHS = [
   '/auth/login',

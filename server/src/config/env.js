@@ -21,6 +21,9 @@ const envSchema = z
     APP_URL: z.string().url().default('http://localhost:5173'),
     CORS_ORIGIN: z.string().default('http://localhost:5173'),
     GOOGLE_CLIENT_ID: z.string().optional(),
+    SUPABASE_PROJECT_URL: z.string().url().optional(),
+    SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
+    SUPABASE_STORAGE_BUCKET: z.string().default('ever-after'),
     UPLOAD_DIR: z.string().default('uploads'),
     MAX_FILE_SIZE_MB: z.coerce.number().default(10),
     RATE_LIMIT_WINDOW_MS: z.coerce.number().default(900_000),
@@ -33,6 +36,13 @@ const envSchema = z
         code: z.ZodIssueCode.custom,
         message: 'DATABASE_URL (or SUPABASE_URL) is required in production',
         path: ['DATABASE_URL'],
+      });
+    }
+    if (data.NODE_ENV === 'production' && !data.SUPABASE_SERVICE_ROLE_KEY) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'SUPABASE_SERVICE_ROLE_KEY is required in production for file uploads',
+        path: ['SUPABASE_SERVICE_ROLE_KEY'],
       });
     }
   });
@@ -53,9 +63,24 @@ function parseCorsOrigins(value) {
     .filter(Boolean);
 }
 
+function deriveSupabaseProjectUrl(databaseUrl, explicitUrl) {
+  if (explicitUrl?.startsWith('https://')) {
+    return explicitUrl.replace(/\/$/, '');
+  }
+  const match = databaseUrl?.match(/@db\.([^.]+)\.supabase\.co/);
+  if (match) {
+    return `https://${match[1]}.supabase.co`;
+  }
+  return undefined;
+}
+
 export default {
   ...env,
   databaseUrl: env.DATABASE_URL || env.SUPABASE_URL,
+  supabaseProjectUrl: deriveSupabaseProjectUrl(
+    env.DATABASE_URL || env.SUPABASE_URL,
+    env.SUPABASE_PROJECT_URL,
+  ),
   corsOrigins: parseCorsOrigins(env.CORS_ORIGIN),
   isProduction: env.NODE_ENV === 'production',
   maxFileSizeBytes: env.MAX_FILE_SIZE_MB * 1024 * 1024,

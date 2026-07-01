@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { API_BASE } from '@/lib/apiBase';
 
 interface GoogleAuthContextValue {
   clientId: string | null;
@@ -37,7 +38,7 @@ export function AppGoogleAuthProvider({ children }: AppGoogleAuthProviderProps) 
       }
 
       try {
-        const response = await fetch('/api/v1/config');
+        const response = await fetch(`${API_BASE}/config`);
         if (!response.ok) return;
 
         const payload = await response.json();
