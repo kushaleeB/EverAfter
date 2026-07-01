@@ -44,6 +44,22 @@ export const publish = async (req, res) => {
   sendSuccess(res, invitation);
 };
 
+export const unpublish = async (req, res) => {
+  const invitation = await invitationService.unpublish(
+    req.params.eventId,
+    req.params.invitationId,
+  );
+  sendSuccess(res, invitation);
+};
+
+export const duplicate = async (req, res) => {
+  const invitation = await invitationService.duplicate(
+    req.params.eventId,
+    req.params.invitationId,
+  );
+  sendCreated(res, invitation);
+};
+
 export const archive = async (req, res) => {
   const invitation = await invitationService.archive(
     req.params.eventId,

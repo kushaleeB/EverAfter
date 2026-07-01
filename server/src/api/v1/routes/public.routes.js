@@ -5,6 +5,7 @@ import { authRateLimiter, publicGuestRateLimiter } from '../../../middleware/rat
 import {
   publicSlugParamSchema,
   accessTokenQuerySchema,
+  publicGuestsQuerySchema,
   submitRsvpSchema,
   updateRsvpSchema,
 } from '../../../validators/rsvp.validator.js';
@@ -28,6 +29,13 @@ router.get(
   '/invitations/:slug',
   validate(publicSlugParamSchema, 'params'),
   asyncHandler(invitationController.getPublic),
+);
+
+router.get(
+  '/invitations/:slug/guests',
+  publicGuestRateLimiter,
+  validateMultiple({ params: publicSlugParamSchema, query: publicGuestsQuerySchema }),
+  asyncHandler(rsvpController.listPublicGuests),
 );
 
 // Guest RSVP flow

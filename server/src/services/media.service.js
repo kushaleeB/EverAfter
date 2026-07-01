@@ -8,6 +8,7 @@ import { serializeMediaAsset } from '../utils/serialize.js';
 import {
   deleteObject,
   isStorageConfigured,
+  shouldUseSupabaseStorage,
   uploadObject,
 } from '../lib/supabaseStorage.js';
 
@@ -51,7 +52,7 @@ export class MediaService {
     const storageKey = buildStorageKey(eventId, filename);
 
     let fileUrl;
-    if (isStorageConfigured()) {
+    if (shouldUseSupabaseStorage()) {
       fileUrl = await uploadObject(storageKey, file.buffer, file.mimetype);
     } else {
       fileUrl = saveLocalFile(filename, file.buffer);
@@ -79,15 +80,15 @@ export class MediaService {
     });
     if (!asset) throw AppError.notFound('Media asset');
 
-    if (isStorageConfigured() && asset.storageKey) {
-      await deleteObject(asset.storageKey);
-    } else if (asset.fileUrl?.startsWith('/uploads/')) {
+    if (asset.fileUrl?.startsWith('/uploads/')) {
       const filename = path.basename(asset.fileUrl);
       try {
         unlinkSync(path.resolve(process.cwd(), env.UPLOAD_DIR, filename));
       } catch {
         // File may already be gone locally.
       }
+    } else if (asset.storageKey && isStorageConfigured()) {
+      await deleteObject(asset.storageKey);
     }
 
     return prisma.mediaAsset.update({

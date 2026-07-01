@@ -4,7 +4,7 @@ import { sendSuccess, sendCreated } from '../utils/response.js';
 // ─── Public ──────────────────────────────────────────────────────────────────
 
 export const getPublicPage = async (req, res) => {
-  const token = req.query.token || req.query.accessToken;
+  const token = req.query.guest || req.query.token || req.query.accessToken;
   const page = await rsvpService.getPublicPage(req.params.slug, token);
   if (token) {
     res.setHeader('Cache-Control', 'no-store, private');
@@ -13,14 +13,21 @@ export const getPublicPage = async (req, res) => {
 };
 
 export const getGuestRsvp = async (req, res) => {
-  const accessToken = req.query.accessToken || req.query.token;
-  const result = await rsvpService.getGuestRsvp(req.params.slug, accessToken);
+  const accessToken = req.query.guest || req.query.accessToken || req.query.token;
+  const guestId = req.query.guestId;
+  const result = await rsvpService.getGuestRsvp(req.params.slug, { accessToken, guestId });
+  res.setHeader('Cache-Control', 'no-store, private');
+  sendSuccess(res, result);
+};
+
+export const listPublicGuests = async (req, res) => {
+  const result = await rsvpService.listPublicGuests(req.params.slug, req.query.q);
   res.setHeader('Cache-Control', 'no-store, private');
   sendSuccess(res, result);
 };
 
 export const getPublicGuestQr = async (req, res) => {
-  const accessToken = req.query.accessToken || req.query.token;
+  const accessToken = req.query.guest || req.query.accessToken || req.query.token;
   const result = await rsvpService.getPublicGuestQr(req.params.slug, accessToken);
   res.setHeader('Cache-Control', 'no-store, private');
   res.setHeader('Pragma', 'no-cache');

@@ -3,6 +3,7 @@ import type {
   CreateInvitationPayload,
   Invitation,
   InvitationSection,
+  PublishInvitationResult,
   RsvpAnalytics,
   UpdateInvitationPayload,
   UpdateSectionPayload,
@@ -59,10 +60,30 @@ export function updateInvitation(
 }
 
 export function publishInvitation(eventId: string, invitationId: string) {
-  return apiRequest<Invitation>(
+  return apiRequest<PublishInvitationResult>(
     `/events/${eventId}/invitations/${invitationId}/publish`,
     { method: 'POST' },
   );
+}
+
+export function unpublishInvitation(eventId: string, invitationId: string) {
+  return apiRequest<Invitation>(
+    `/events/${eventId}/invitations/${invitationId}/unpublish`,
+    { method: 'POST' },
+  );
+}
+
+export function duplicateInvitation(eventId: string, invitationId: string) {
+  return apiRequest<Invitation>(
+    `/events/${eventId}/invitations/${invitationId}/duplicate`,
+    { method: 'POST' },
+  );
+}
+
+export function deleteInvitation(eventId: string, invitationId: string) {
+  return apiRequest<void>(`/events/${eventId}/invitations/${invitationId}`, {
+    method: 'DELETE',
+  });
 }
 
 export function listInvitationSections(eventId: string, invitationId: string) {

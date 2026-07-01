@@ -8,32 +8,41 @@ export const guestAccessTokenSchema = z.string().trim().min(16).max(128);
 export const accessTokenQuerySchema = z.object({
   token: guestAccessTokenSchema.optional(),
   accessToken: guestAccessTokenSchema.optional(),
-}).refine((data) => Boolean(data.token || data.accessToken), {
-  message: 'accessToken is required',
+  guest: guestAccessTokenSchema.optional(),
+  guestId: z.string().uuid().optional(),
+}).refine((data) => Boolean(data.token || data.accessToken || data.guest || data.guestId), {
+  message: 'accessToken or guestId is required',
 });
 
-export const publicPageQuerySchema = z.object({
-  token: guestAccessTokenSchema.optional(),
-  accessToken: guestAccessTokenSchema.optional(),
-}).refine((d) => d.token || d.accessToken, {
-  message: 'token or accessToken is required for guest context',
+export const publicGuestsQuerySchema = z.object({
+  q: z.string().trim().max(100).optional(),
 });
 
-export const submitRsvpSchema = z.object({
-  accessToken: guestAccessTokenSchema,
-  status: rsvpStatusEnum,
-  attendingCount: z.number().int().min(0).max(20).default(0),
-  dietaryNotes: z.string().max(500).optional(),
-  message: z.string().max(1000).optional(),
-});
+export const submitRsvpSchema = z
+  .object({
+    accessToken: guestAccessTokenSchema.optional(),
+    guestId: z.string().uuid().optional(),
+    status: rsvpStatusEnum,
+    attendingCount: z.number().int().min(0).max(20).default(0),
+    dietaryNotes: z.string().max(500).optional(),
+    message: z.string().max(1000).optional(),
+  })
+  .refine((data) => Boolean(data.accessToken || data.guestId), {
+    message: 'guestId or accessToken is required',
+  });
 
-export const updateRsvpSchema = z.object({
-  accessToken: guestAccessTokenSchema,
-  status: rsvpStatusEnum.optional(),
-  attendingCount: z.number().int().min(0).max(20).optional(),
-  dietaryNotes: z.string().max(500).optional(),
-  message: z.string().max(1000).optional(),
-});
+export const updateRsvpSchema = z
+  .object({
+    accessToken: guestAccessTokenSchema.optional(),
+    guestId: z.string().uuid().optional(),
+    status: rsvpStatusEnum.optional(),
+    attendingCount: z.number().int().min(0).max(20).optional(),
+    dietaryNotes: z.string().max(500).optional(),
+    message: z.string().max(1000).optional(),
+  })
+  .refine((data) => Boolean(data.accessToken || data.guestId), {
+    message: 'guestId or accessToken is required',
+  });
 
 export const hostUpdateRsvpSchema = z.object({
   status: z.enum(['pending', 'attending', 'declined', 'maybe']),

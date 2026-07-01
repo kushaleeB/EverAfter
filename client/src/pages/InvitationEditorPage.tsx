@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowLeft, Eye, Send } from 'lucide-react';
+import { ArrowLeft, Eye, Send, Undo2 } from 'lucide-react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { listEvents } from '@/api/events';
 import { uploadEventMedia, uploadEventMediaWithProgress } from '@/api/media';
@@ -7,11 +7,13 @@ import {
   getInvitation,
   getInvitationRsvpAnalytics,
   publishInvitation,
+  unpublishInvitation,
   updateInvitation,
   updateInvitationSection,
 } from '@/api/invitations';
 import { InvitationFlowSidebar } from '@/components/invitations/InvitationFlowSidebar';
 import { InvitationPreview } from '@/components/invitations/InvitationPreview';
+import { PublishSuccessModal } from '@/components/invitations/PublishSuccessModal';
 import { PublishValidationDialog } from '@/components/invitations/PublishValidationDialog';
 import { SectionEditorPanel } from '@/components/invitations/SectionEditorPanel';
 import type { GalleryEditorChange, GalleryUploadTarget } from '@/components/invitations/GallerySectionEditor';
@@ -19,8 +21,12 @@ import type { RsvpEditorChange, RsvpUploadTarget } from '@/components/invitation
 import type { ScheduleEditorChange, ScheduleUploadTarget } from '@/components/invitations/ScheduleSectionEditor';
 import type { StoryEditorChange, StoryImageUploadTarget } from '@/components/invitations/StorySectionEditor';
 import { Button } from '@/components/ui/button';
+import { Toast } from '@/components/ui/Toast';
 import { eventDisplayName } from '@/components/dashboard/EventSelector';
+import { useToast } from '@/hooks/useToast';
 import { ApiError } from '@/lib/api';
+import { firePublishConfetti } from '@/lib/confetti';
+import { resolvePublicInviteUrl } from '@/lib/invitationUrls';
 import { API_BASE } from '@/lib/apiBase';
 import type { HeroEditorChange } from '@/components/invitations/HeroSectionEditor';
 import { heroDetailsToContent, parseHeroDetails, validateHeroDetails } from '@/lib/heroSection';
@@ -103,19 +109,22 @@ export function InvitationEditorPage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle');
   const [saveError, setSaveError] = useState<string | null>(null);
   const [isPublishing, setIsPublishing] = useState(false);
+  const [isUnpublishing, setIsUnpublishing] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [rsvpAnalytics, setRsvpAnalytics] = useState<RsvpAnalytics | null>(null);
   const [rsvpAnalyticsLoading, setRsvpAnalyticsLoading] = useState(false);
   const [validationAttempted, setValidationAttempted] = useState(false);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
-  const [validationSuccessMessage, setValidationSuccessMessage] = useState<string | null>(null);
+  const [showPublishSuccess, setShowPublishSuccess] = useState(false);
+  const [publishedShareUrl, setPublishedShareUrl] = useState<string | null>(null);
   const [forcedOpenPanels, setForcedOpenPanels] = useState<Set<string>>(new Set());
   const [forceExpandScheduleEventId, setForceExpandScheduleEventId] = useState<string | null>(null);
 
   const pendingSaveRef = useRef<PendingSave>({ sections: new Map() });
   const editorScrollRef = useRef<HTMLDivElement>(null);
   const scheduleSave = useDebouncedSave(500);
+  const { toast, showToast } = useToast();
 
   const activeSection = useMemo(
     () => invitation?.sections?.find((section) => section.id === activeSectionId) ?? null,
@@ -816,11 +825,22 @@ export function InvitationEditorPage() {
       setIsPublishing(true);
       setError(null);
       await flushSave();
-      const updated = await publishInvitation(eventId, invitation.id);
+      const result = await publishInvitation(eventId, invitation.id);
+      const publicUrl = resolvePublicInviteUrl(result.publicSlug ?? result.slug, result.publicUrl);
       setInvitation((current) =>
-        current ? { ...current, ...updated, sections: current.sections } : current,
+        current
+          ? {
+              ...current,
+              status: result.status,
+              publishedAt: result.publishedAt,
+              slug: result.publicSlug ?? result.slug,
+            }
+          : current,
       );
-      setValidationSuccessMessage('Invitation published successfully.');
+      setPublishedShareUrl(publicUrl);
+      setShowPublishSuccess(true);
+      firePublishConfetti();
+      showToast('Invitation published successfully.');
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Failed to publish invitation.');
     } finally {
@@ -828,8 +848,43 @@ export function InvitationEditorPage() {
     }
   }
 
+  function openShareModal() {
+    if (!invitation) return;
+    const publicUrl = resolvePublicInviteUrl(invitation.slug);
+    setPublishedShareUrl(publicUrl);
+    setShowPublishSuccess(true);
+  }
+
+  async function handleUnpublish() {
+    if (!invitation || !eventId) return;
+    if (
+      !window.confirm('Unpublish this invitation? Guests will no longer be able to view it.')
+    ) {
+      return;
+    }
+
+    try {
+      setIsUnpublishing(true);
+      setError(null);
+      const updated = await unpublishInvitation(eventId, invitation.id);
+      setInvitation((current) =>
+        current ? { ...current, status: updated.status } : current,
+      );
+      setShowPublishSuccess(false);
+      showToast('Invitation unpublished.');
+    } catch (err) {
+      showToast(err instanceof ApiError ? err.message : 'Failed to unpublish invitation.');
+    } finally {
+      setIsUnpublishing(false);
+    }
+  }
+
   function handlePublishClick() {
-    if (!validation.isValid) return;
+    setValidationAttempted(true);
+    if (!validation.isValid) {
+      setShowValidationDialog(true);
+      return;
+    }
     void handlePublish();
   }
 
@@ -872,6 +927,8 @@ export function InvitationEditorPage() {
   const publishDisabled =
     isPublishing || invitation.status === 'published' || !validation.isValid || saveStatus === 'saving';
 
+  const unpublishDisabled = isUnpublishing || saveStatus === 'saving';
+
   const issueCount = validationIssues.length;
 
   return (
@@ -882,6 +939,18 @@ export function InvitationEditorPage() {
         onClose={() => setShowValidationDialog(false)}
         onSelectIssue={navigateToValidationIssue}
       />
+
+      {publishedShareUrl && invitation && (
+        <PublishSuccessModal
+          open={showPublishSuccess}
+          publicUrl={publishedShareUrl}
+          slug={invitation.slug}
+          onClose={() => setShowPublishSuccess(false)}
+          onCopySuccess={() => showToast('Invitation link copied.')}
+        />
+      )}
+
+      <Toast message={toast} />
 
       <header className="flex h-14 shrink-0 items-center justify-between border-b border-[#e8dfd6] bg-white px-4">
         <div className="flex items-center gap-4">
@@ -917,24 +986,51 @@ export function InvitationEditorPage() {
             type="button"
             variant="ghost"
             className="h-9 gap-2 border border-[#e8dfd6] px-4 font-body text-sm text-[#4e342e]"
-            onClick={() => window.open(`${API_BASE}/public/invitations/${invitation.slug}`, '_blank')}
+            onClick={() =>
+              window.open(
+                invitation.status === 'published'
+                  ? resolvePublicInviteUrl(invitation.slug)
+                  : `${API_BASE}/public/invitations/${invitation.slug}`,
+                '_blank',
+              )
+            }
           >
             <Eye className="h-4 w-4" />
-            Preview
+            {invitation.status === 'published' ? 'View Live' : 'Preview'}
           </Button>
-          <Button
-            type="button"
-            disabled={publishDisabled}
-            className="h-9 gap-2 bg-[#4e342e] px-4 font-body text-sm text-white hover:bg-[#3e2723] disabled:opacity-50"
-            onClick={() => void handlePublishClick()}
-          >
-            <Send className="h-4 w-4" />
-            {isPublishing
-              ? 'Publishing...'
-              : invitation.status === 'published'
-                ? 'Published'
-                : 'Publish'}
-          </Button>
+          {invitation.status === 'published' && (
+            <Button
+              type="button"
+              variant="ghost"
+              className="h-9 gap-2 border border-[#e8dfd6] px-4 font-body text-sm text-[#4e342e]"
+              onClick={openShareModal}
+            >
+              <Send className="h-4 w-4" />
+              Share
+            </Button>
+          )}
+          {invitation.status === 'published' ? (
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={unpublishDisabled}
+              className="h-9 gap-2 border border-[#e8dfd6] px-4 font-body text-sm text-[#4e342e] hover:border-[#c5a67c] hover:bg-[#faf7f2] disabled:opacity-50"
+              onClick={() => void handleUnpublish()}
+            >
+              <Undo2 className="h-4 w-4" />
+              {isUnpublishing ? 'Unpublishing...' : 'Unpublish'}
+            </Button>
+          ) : (
+            <Button
+              type="button"
+              disabled={publishDisabled}
+              className="h-9 gap-2 bg-[#4e342e] px-4 font-body text-sm text-white hover:bg-[#3e2723] disabled:opacity-50"
+              onClick={() => void handlePublishClick()}
+            >
+              <Send className="h-4 w-4" />
+              {isPublishing ? 'Publishing...' : 'Publish'}
+            </Button>
+          )}
         </div>
       </header>
 
@@ -961,7 +1057,7 @@ export function InvitationEditorPage() {
           galleryValidation={validation.gallery}
           rsvpValidation={validation.rsvp}
           showValidation={validationAttempted}
-          validationSuccessMessage={validationSuccessMessage}
+          validationSuccessMessage={null}
           forcedOpenPanels={forcedOpenPanels}
           forceExpandScheduleEventId={forceExpandScheduleEventId}
           editorScrollRef={editorScrollRef}

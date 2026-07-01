@@ -19,7 +19,30 @@ function getClient() {
 }
 
 export function isStorageConfigured() {
-  return Boolean(env.supabaseProjectUrl && env.SUPABASE_SERVICE_ROLE_KEY);
+  const key = env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+  if (!key || !env.supabaseProjectUrl) return false;
+  if (key.includes('your-supabase-service-role-key') || key.startsWith('REPLACE_')) {
+    return false;
+  }
+  return true;
+}
+
+/** `local` = disk; `supabase` = bucket; `auto` = local in dev, supabase in production. */
+export function shouldUseSupabaseStorage() {
+  if (env.UPLOAD_STORAGE === 'local') return false;
+
+  if (!isStorageConfigured()) {
+    if (env.UPLOAD_STORAGE === 'supabase' || env.isProduction) {
+      throw new AppError(
+        'Supabase Storage is not configured. Set SUPABASE_SERVICE_ROLE_KEY and SUPABASE_STORAGE_BUCKET.',
+        500,
+      );
+    }
+    return false;
+  }
+
+  if (env.UPLOAD_STORAGE === 'supabase' || env.isProduction) return true;
+  return false;
 }
 
 export function getPublicUrl(storageKey) {

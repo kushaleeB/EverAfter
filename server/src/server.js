@@ -24,6 +24,17 @@ try {
   }
 }
 
+const { isStorageConfigured } = await import('./lib/supabaseStorage.js');
+const uploadMode =
+  env.UPLOAD_STORAGE === 'local'
+    ? 'local disk'
+    : isStorageConfigured()
+      ? `supabase bucket "${env.SUPABASE_STORAGE_BUCKET}"`
+      : env.isProduction
+        ? 'MISSING — set SUPABASE_SERVICE_ROLE_KEY'
+        : 'local disk (dev fallback)';
+console.log(`Media uploads: ${uploadMode}`);
+
 const PORT = env.PORT;
 const HOST = '0.0.0.0';
 

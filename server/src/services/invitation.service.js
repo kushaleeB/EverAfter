@@ -1,9 +1,12 @@
 import prisma from '../lib/prisma.js';
 import invitationRepository from '../repositories/invitation.repository.js';
 import sectionRepository from '../repositories/invitation-section.repository.js';
+import { AppError } from '../errors/AppError.js';
 import { parsePagination, buildPaginationMeta, parseSort } from '../utils/pagination.js';
 import { serializeInvitation } from '../utils/serialize.js';
-import { AppError } from '../errors/AppError.js';
+import { generateUniqueSlug } from '../lib/invitationSlug.js';
+import { toPublishPayload } from '../lib/publicInviteUrl.js';
+import { validateInvitationForPublish } from '../lib/publishValidation.js';
 
 const SORTABLE_FIELDS = ['createdAt', 'updatedAt', 'publishedAt', 'headline', 'viewCount'];
 
@@ -99,14 +102,14 @@ export class InvitationService {
     const existing = await this.invitationRepo.findById(invitationId, eventId);
     if (!existing) throw AppError.notFound('Invitation');
 
-    if (data.slug && data.slug !== existing.slug) {
+    if (data.slug && data.slug !== existing.slug && existing.status === 'published') {
       if (await this.invitationRepo.slugExists(data.slug, invitationId)) {
         throw AppError.conflict('Slug is already taken');
       }
-    }
-
-    if (existing.status === 'published' && data.status === 'draft') {
-      throw AppError.badRequest('Cannot revert a published invitation to draft. Use archive instead.');
+    } else if (data.slug && data.slug !== existing.slug) {
+      if (await this.invitationRepo.slugExists(data.slug, invitationId)) {
+        throw AppError.conflict('Slug is already taken');
+      }
     }
 
     const updateData = { ...data };
@@ -123,19 +126,80 @@ export class InvitationService {
     if (!invitation) throw AppError.notFound('Invitation');
 
     if (invitation.status === 'published') {
-      throw AppError.conflict('Invitation is already published');
+      return toPublishPayload(invitation);
     }
 
     if (invitation.status === 'archived') {
       throw AppError.badRequest('Cannot publish an archived invitation');
     }
 
+    validateInvitationForPublish(invitation);
+
+    let slug = invitation.slug;
+    if (!slug) {
+      slug = await generateUniqueSlug(
+        invitation.headline || invitation.event?.partnerOne || 'invitation',
+        (candidate) => this.invitationRepo.slugExists(candidate, invitationId),
+      );
+    }
+
     const updated = await this.invitationRepo.update(invitationId, {
+      slug,
       status: 'published',
       publishedAt: new Date(),
     });
 
+    return toPublishPayload(updated);
+  }
+
+  async unpublish(eventId, invitationId) {
+    const invitation = await this.invitationRepo.findById(invitationId, eventId);
+    if (!invitation) throw AppError.notFound('Invitation');
+
+    if (invitation.status !== 'published') {
+      throw AppError.badRequest('Only published invitations can be unpublished');
+    }
+
+    const updated = await this.invitationRepo.update(invitationId, {
+      status: 'draft',
+    });
+
     return serializeInvitation(updated);
+  }
+
+  async duplicate(eventId, invitationId) {
+    const source = await this.invitationRepo.findById(invitationId, eventId);
+    if (!source) throw AppError.notFound('Invitation');
+
+    const slug = await generateUniqueSlug(
+      `${source.headline || 'invitation'}-copy`,
+      (candidate) => this.invitationRepo.slugExists(candidate),
+    );
+
+    const invitation = await this.invitationRepo.create({
+      eventId,
+      templateId: source.templateId,
+      slug,
+      headline: source.headline ? `${source.headline} (Copy)` : 'Invitation (Copy)',
+      subheadline: source.subheadline,
+      bodyContent: source.bodyContent,
+      themeConfig: source.themeConfig ?? {},
+      rsvpDeadline: source.rsvpDeadline,
+      passwordProtected: source.passwordProtected,
+      status: 'draft',
+      sections: source.sections?.length
+        ? {
+            create: source.sections.map((section) => ({
+              sectionType: section.sectionType,
+              sortOrder: section.sortOrder,
+              content: section.content ?? {},
+              isVisible: section.isVisible,
+            })),
+          }
+        : undefined,
+    });
+
+    return serializeInvitation(invitation);
   }
 
   async archive(eventId, invitationId) {

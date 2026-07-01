@@ -1,4 +1,5 @@
 import type { InvitationSection } from '@/types/api';
+import { resolveOptionalMediaUrl, resolveRequiredMediaUrl } from '@/lib/mediaUrl';
 
 export type StoryLayout =
   | 'vertical-timeline'
@@ -99,12 +100,13 @@ function parseTimeline(value: unknown): StoryTimelineEvent[] {
         title: readString(record.title),
         date: readString(record.date),
         description: readString(record.description),
-        imageUrl:
+        imageUrl: resolveOptionalMediaUrl(
           record.imageUrl === null
             ? null
             : typeof record.imageUrl === 'string' && record.imageUrl.length > 0
               ? record.imageUrl
               : null,
+        ),
         location: readString(record.location),
       };
     })
@@ -122,7 +124,7 @@ function parseGallery(value: unknown): StoryGalleryImage[] {
       if (!url) return null;
       return {
         id: readString(record.id, `gallery-${index}`),
-        url,
+        url: resolveRequiredMediaUrl(url),
         alt: readString(record.alt),
       };
     })
@@ -150,12 +152,13 @@ export function parseStoryDetails(section: InvitationSection | undefined): Story
       : DEFAULT_STORY_DETAILS.animation;
 
   const imageUrlRaw = content.backgroundImageUrl;
-  const backgroundImageUrl =
+  const backgroundImageUrl = resolveOptionalMediaUrl(
     imageUrlRaw === null
       ? null
       : typeof imageUrlRaw === 'string' && imageUrlRaw.length > 0
         ? imageUrlRaw
-        : null;
+        : null,
+  );
 
   return {
     title: readString(content.title, DEFAULT_STORY_DETAILS.title),

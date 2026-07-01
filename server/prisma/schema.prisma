@@ -215,8 +215,11 @@ model Guest {
   category       GuestCategory @default(other)
   partySize      Int           @default(1) @map("party_size")
   plusOneAllowed Boolean       @default(false) @map("plus_one_allowed")
-  accessToken    String        @unique @map("access_token") @db.VarChar(64)
-  inviteSentAt   DateTime?     @map("invite_sent_at") @db.Timestamptz(6)
+  accessToken    String            @unique @map("access_token") @db.VarChar(64)
+  inviteStatus   GuestInviteStatus @default(not_sent) @map("invite_status")
+  inviteSentAt   DateTime?         @map("invite_sent_at") @db.Timestamptz(6)
+  inviteOpenedAt DateTime?         @map("invite_opened_at") @db.Timestamptz(6)
+  respondedAt    DateTime?         @map("responded_at") @db.Timestamptz(6)
   notes          String?
   createdAt      DateTime      @default(now()) @map("created_at") @db.Timestamptz(6)
   updatedAt      DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(6)
@@ -317,6 +320,15 @@ enum SectionType {
   custom
 
   @@map("section_type")
+}
+
+enum GuestInviteStatus {
+  not_sent
+  sent
+  opened
+  responded
+
+  @@map("guest_invite_status")
 }
 
 enum GuestRole {
