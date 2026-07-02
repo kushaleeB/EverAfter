@@ -1,11 +1,4 @@
-import {
-  BookOpen,
-  Calendar,
-  Camera,
-  FileText,
-  Mail,
-  Plus,
-} from 'lucide-react';
+import { BookOpen, Calendar, Camera, FileText, Mail } from 'lucide-react';
 import type { InvitationSection, SectionType } from '@/types/api';
 import { SECTION_FLOW_LABELS } from '@/lib/invitations';
 import { cn } from '@/lib/utils';
@@ -78,17 +71,6 @@ export function InvitationFlowSidebar({
             );
           })}
         </nav>
-      </div>
-
-      <div className="border-t border-[#e8dfd6] p-4">
-        <button
-          type="button"
-          disabled
-          className="flex w-full items-center justify-center gap-2 rounded-lg border border-dashed border-[#e8dfd6] px-3 py-2.5 font-body text-sm text-[#9e8e82]"
-        >
-          <Plus className="h-4 w-4" />
-          Add Page
-        </button>
       </div>
     </aside>
   );
