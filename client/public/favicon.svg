@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EverAfter">
+  <circle cx="256" cy="256" r="256" fill="#FFFFFF"/>
+
+  <!--
+    EverAfter infinity ligature (single continuous stroke).
+    - Left lobe: broader curve (E)
+    - Right lobe: elevated apex (A)
+    - Center knot: everlasting bond (gold)
+  -->
+  <path
+    fill="none"
+    stroke="#4A3428"
+    stroke-width="36"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M 168 256
+       C 168 152, 256 152, 256 256
+       C 256 360, 344 360, 344 256
+       C 344 132, 270 114, 256 212
+       C 242 114, 168 132, 168 256
+       Z"
+  />
+
+  <circle cx="256" cy="256" r="7" fill="#C9A063"/>
+</svg>

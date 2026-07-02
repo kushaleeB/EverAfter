@@ -67,7 +67,8 @@ export function PricingPage() {
     <div className="min-h-screen bg-white">
       <LandingNavbar />
 
-      <main>
+      <main className="relative">
+        <div className="pointer-events-none select-none blur-[6px]" aria-hidden="true">
         {/* Hero */}
         <section className="px-6 pb-12 pt-14 text-center md:px-16 md:pb-16 md:pt-16">
           <div className="mx-auto max-w-3xl">
@@ -175,6 +176,22 @@ export function PricingPage() {
             })}
           </div>
         </section>
+        </div>
+
+        <div className="absolute inset-0 flex items-center justify-center bg-white/50 px-6 backdrop-blur-[2px]">
+          <div className="max-w-md rounded-2xl border border-[#e8dfd6] bg-white/95 px-10 py-12 text-center shadow-[0_12px_48px_rgba(0,0,0,0.08)]">
+            <p className="font-body text-[11px] font-semibold uppercase tracking-[0.2em] text-[#a1887f]">
+              Coming Soon
+            </p>
+            <h2 className="mt-3 font-display text-3xl text-[#4e342e] md:text-4xl">
+              Pricing on the way
+            </h2>
+            <p className="mt-4 font-body text-sm leading-relaxed text-[#6d625a] md:text-base">
+              We&apos;re finalizing our plans. Check back soon for tiers crafted for every
+              celebration.
+            </p>
+          </div>
+        </div>
       </main>
 
       <LandingFooter />
