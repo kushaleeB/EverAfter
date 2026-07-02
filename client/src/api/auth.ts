@@ -18,6 +18,11 @@ export interface ChangePasswordPayload {
   newPassword: string;
 }
 
+export interface UpdateProfilePayload {
+  firstName: string;
+  lastName: string;
+}
+
 export interface ForgotPasswordPayload {
   email: string;
 }
@@ -57,6 +62,13 @@ export function logoutUser(refreshToken: string) {
 
 export function getMe() {
   return apiRequest<AuthUser>('/auth/me');
+}
+
+export function updateProfile(payload: UpdateProfilePayload) {
+  return apiRequest<AuthUser>('/auth/me', {
+    method: 'PATCH',
+    body: JSON.stringify(payload),
+  });
 }
 
 export function changePassword(payload: ChangePasswordPayload) {

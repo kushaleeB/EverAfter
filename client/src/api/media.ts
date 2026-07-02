@@ -1,4 +1,4 @@
-import { apiUpload, ApiError, isSuccessStatus } from '@/lib/api';
+import { apiRequest, apiUpload, ApiError, isSuccessStatus } from '@/lib/api';
 import { API_BASE, resolveMediaUrl } from '@/lib/apiBase';
 import { getAccessToken } from '@/lib/auth';
 import { refreshAccessToken } from '@/lib/tokenRefresh';
@@ -9,6 +9,37 @@ export interface MediaAsset {
   fileUrl: string;
   fileName: string;
   mimeType: string;
+  assetType?: string;
+  fileSizeBytes?: number;
+  createdAt?: string;
+}
+
+function normalizeMediaAsset(data: Record<string, unknown>): MediaAsset {
+  const fileUrl = data.fileUrl ?? data.file_url;
+  const fileName = data.fileName ?? data.file_name;
+  const mimeType = data.mimeType ?? data.mime_type;
+  const assetType = data.assetType ?? data.asset_type;
+  const fileSizeBytes = data.fileSizeBytes ?? data.file_size_bytes;
+  const createdAt = data.createdAt ?? data.created_at;
+
+  if (!data.id || !fileUrl) {
+    throw new ApiError('Upload succeeded but the server returned an invalid response.', 200);
+  }
+
+  return {
+    id: String(data.id),
+    fileUrl: resolveMediaUrl(String(fileUrl)),
+    fileName: String(fileName ?? 'upload.jpg'),
+    mimeType: String(mimeType ?? 'image/jpeg'),
+    assetType: assetType ? String(assetType) : undefined,
+    fileSizeBytes: typeof fileSizeBytes === 'number' ? fileSizeBytes : undefined,
+    createdAt: createdAt ? String(createdAt) : undefined,
+  };
+}
+
+function normalizeMediaList(items: unknown): MediaAsset[] {
+  if (!Array.isArray(items)) return [];
+  return items.map((item) => normalizeMediaAsset(item as Record<string, unknown>));
 }
 
 function extractMediaPayload(body: unknown): Record<string, unknown> | null {
@@ -28,23 +59,6 @@ function extractMediaPayload(body: unknown): Record<string, unknown> | null {
   }
 
   return null;
-}
-
-function normalizeMediaAsset(data: Record<string, unknown>): MediaAsset {
-  const fileUrl = data.fileUrl ?? data.file_url;
-  const fileName = data.fileName ?? data.file_name;
-  const mimeType = data.mimeType ?? data.mime_type;
-
-  if (!data.id || !fileUrl) {
-    throw new ApiError('Upload succeeded but the server returned an invalid response.', 200);
-  }
-
-  return {
-    id: String(data.id),
-    fileUrl: resolveMediaUrl(String(fileUrl)),
-    fileName: String(fileName ?? 'upload.jpg'),
-    mimeType: String(mimeType ?? 'image/jpeg'),
-  };
 }
 
 async function parseUploadResponse(xhr: XMLHttpRequest): Promise<MediaAsset> {
@@ -150,13 +164,23 @@ function uploadEventMediaWithProgressInternal(
   });
 }
 
+export function listEventMedia(eventId: string) {
+  return apiRequest<unknown[]>(`/events/${eventId}/media`).then(normalizeMediaList);
+}
+
+export function deleteEventMedia(eventId: string, mediaId: string) {
+  return apiRequest<void>(`/events/${eventId}/media/${mediaId}`, { method: 'DELETE' });
+}
+
 export function uploadEventMedia(eventId: string, file: File, invitationId?: string) {
   const formData = new FormData();
   formData.append('file', file);
   if (invitationId) {
     formData.append('invitationId', invitationId);
   }
-  return apiUpload<MediaAsset>(`/events/${eventId}/media`, formData);
+  return apiUpload<Record<string, unknown>>(`/events/${eventId}/media`, formData).then(
+    normalizeMediaAsset,
+  );
 }
 
 export function uploadEventMediaWithProgress(

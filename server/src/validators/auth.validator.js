@@ -38,6 +38,11 @@ export const changePasswordSchema = z.object({
   newPassword: passwordSchema,
 });
 
+export const updateProfileSchema = z.object({
+  firstName: z.string().trim().min(1, 'First name is required').max(100),
+  lastName: z.string().trim().min(1, 'Last name is required').max(100),
+});
+
 export const googleAuthSchema = z.object({
   accessToken: z.string().min(1),
 });

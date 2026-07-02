@@ -262,6 +262,24 @@ export class AuthService {
     return sanitizeUser(user);
   }
 
+  async updateProfile(userId, { firstName, lastName }) {
+    const user = await prisma.user.findFirst({
+      where: { id: userId, deletedAt: null },
+    });
+
+    if (!user) throw AppError.notFound('User');
+
+    const updated = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+      },
+    });
+
+    return sanitizeUser(updated);
+  }
+
   async _issueTokens(user, { userAgent, ipAddress } = {}) {
     const payload = { sub: user.id, role: user.role };
     const accessToken = signAccessToken(payload);

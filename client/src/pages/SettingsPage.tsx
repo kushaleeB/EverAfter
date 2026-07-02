@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { KeyRound, LogOut, Shield, User } from 'lucide-react';
-import { changePassword, logoutAllSessions, logoutUser } from '@/api/auth';
+import { changePassword, logoutAllSessions, logoutUser, updateProfile } from '@/api/auth';
 import { DashboardLayout } from '@/app/layouts/DashboardLayout';
 import { DashboardMessage } from '@/components/dashboard/DashboardMessage';
 import { Button } from '@/components/ui/button';
@@ -14,7 +14,7 @@ import { useAuthStore } from '@/stores/authStore';
 function ProfileField({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-lg border border-[#f0ebe6] bg-[#faf9f6] px-4 py-3">
-      <p className="font-body text-[10px] font-semibold uppercase tracking-[0.1em] text-[#9e8e82]">
+      <p className="font-body text-[10px] font-semibold uppercase tracking-widest text-[#9e8e82]">
         {label}
       </p>
       <p className="mt-1 font-body text-sm text-[#4e342e]">{value}</p>
@@ -31,8 +31,15 @@ export function SettingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [profileMessage, setProfileMessage] = useState<string | null>(null);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [loggingOutAll, setLoggingOutAll] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    firstName: '',
+    lastName: '',
+  });
 
   const [passwordForm, setPasswordForm] = useState({
     currentPassword: '',
@@ -48,6 +55,40 @@ export function SettingsPage() {
       setLoading(false);
     })();
   }, [refreshUser]);
+
+  useEffect(() => {
+    if (!user) return;
+    setProfileForm({
+      firstName: user.firstName,
+      lastName: user.lastName,
+    });
+  }, [user]);
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setProfileMessage(null);
+    setProfileError(null);
+
+    const firstName = profileForm.firstName.trim();
+    const lastName = profileForm.lastName.trim();
+
+    if (!firstName || !lastName) {
+      setProfileError('First name and last name are required.');
+      return;
+    }
+
+    setSavingProfile(true);
+    try {
+      await updateProfile({ firstName, lastName });
+      await refreshUser();
+      setProfileForm({ firstName, lastName });
+      setProfileMessage('Profile updated successfully.');
+    } catch (err) {
+      setProfileError(err instanceof ApiError ? err.message : 'Failed to update profile.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -131,21 +172,60 @@ export function SettingsPage() {
               <h2 className="font-display text-xl text-[#4e342e]">Profile</h2>
             </div>
             <p className="mt-2 font-body text-sm text-[#6d625a]">
-              Loaded from <code className="text-xs">GET /auth/me</code>. Profile editing is not yet
-              available on the backend.
+              Update your profile details used across your account and dashboard.
             </p>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <ProfileField label="First Name" value={user.firstName} />
-              <ProfileField label="Last Name" value={user.lastName} />
-              <ProfileField label="Email" value={user.email} />
-              <ProfileField label="Role" value={user.role} />
-              <ProfileField label="Member Since" value={formatDate(user.createdAt)} />
-              <ProfileField
-                label="Email Verified"
-                value={user.emailVerifiedAt ? formatDate(user.emailVerifiedAt) : 'Not verified'}
-              />
-            </div>
+            <form onSubmit={handleProfileSubmit} className="mt-6 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1.5 block font-body text-xs font-medium text-[#6d625a]">
+                    First name
+                  </label>
+                  <Input
+                    required
+                    value={profileForm.firstName}
+                    onChange={(e) =>
+                      setProfileForm((form) => ({ ...form, firstName: e.target.value }))
+                    }
+                  />
+                </div>
+                <div>
+                  <label className="mb-1.5 block font-body text-xs font-medium text-[#6d625a]">
+                    Last name
+                  </label>
+                  <Input
+                    required
+                    value={profileForm.lastName}
+                    onChange={(e) =>
+                      setProfileForm((form) => ({ ...form, lastName: e.target.value }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="grid gap-3 sm:grid-cols-2">
+                <ProfileField label="Email" value={user.email} />
+                <ProfileField label="Role" value={user.role} />
+                <ProfileField label="Member Since" value={formatDate(user.createdAt)} />
+                <ProfileField
+                  label="Email Verified"
+                  value={user.emailVerifiedAt ? formatDate(user.emailVerifiedAt) : 'Not verified'}
+                />
+              </div>
+
+              {profileError && <p className="font-body text-sm text-red-700">{profileError}</p>}
+              {profileMessage && (
+                <p className="font-body text-sm text-[#2e7d32]">{profileMessage}</p>
+              )}
+
+              <Button
+                type="submit"
+                disabled={savingProfile}
+                className="bg-[#4e342e] text-white hover:bg-[#3e2723]"
+              >
+                {savingProfile ? 'Saving...' : 'Save Profile'}
+              </Button>
+            </form>
           </section>
 
           <section className="rounded-xl border border-[#e8dfd6] bg-white p-6 shadow-[0_4px_24px_rgba(0,0,0,0.04)]">

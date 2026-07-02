@@ -58,3 +58,8 @@ export const me = async (req, res) => {
   const user = await authService.getProfile(req.user.id);
   sendSuccess(res, user);
 };
+
+export const updateProfile = async (req, res) => {
+  const user = await authService.updateProfile(req.user.id, req.body);
+  sendSuccess(res, user);
+};

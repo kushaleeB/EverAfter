@@ -10,6 +10,7 @@ import {
   forgotPasswordSchema,
   resetPasswordSchema,
   changePasswordSchema,
+  updateProfileSchema,
   googleAuthSchema,
 } from '../../../validators/auth.validator.js';
 import * as authController from '../../../controllers/auth.controller.js';
@@ -27,6 +28,7 @@ router.post('/reset-password', authRateLimiter, validate(resetPasswordSchema), a
 
 // Protected auth endpoints
 router.get('/me', authenticate, asyncHandler(authController.me));
+router.patch('/me', authenticate, validate(updateProfileSchema), asyncHandler(authController.updateProfile));
 router.post('/logout-all', authenticate, asyncHandler(authController.logoutAll));
 router.post('/change-password', authenticate, validate(changePasswordSchema), asyncHandler(authController.changePassword));
 
