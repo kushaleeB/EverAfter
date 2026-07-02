@@ -1,26 +1,25 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="EverAfter">
-  <!-- Circular badge background -->
   <circle cx="256" cy="256" r="256" fill="#FFFFFF"/>
 
-  <!-- Badge rim -->
-  <circle cx="256" cy="256" r="238" fill="none" stroke="#C9A063" stroke-width="6"/>
+  <!--
+    EverAfter infinity ligature (single continuous stroke).
+    - Left lobe: broader curve (E)
+    - Right lobe: elevated apex (A)
+    - Center knot: everlasting bond (gold)
+  -->
+  <path
+    fill="none"
+    stroke="#4A3428"
+    stroke-width="36"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+    d="M 168 256
+       C 168 152, 256 152, 256 256
+       C 256 360, 344 360, 344 256
+       C 344 132, 270 114, 256 212
+       C 242 114, 168 132, 168 256
+       Z"
+  />
 
-  <!-- Interlocking wedding rings -->
-  <circle cx="224" cy="276" r="104" fill="none" stroke="#C9A063" stroke-width="28"/>
-  <circle cx="288" cy="276" r="104" fill="none" stroke="#C9A063" stroke-width="28"/>
-
-  <!-- Diamond accent -->
-  <path fill="#C9A063" d="M224 132 L238 158 L224 184 L210 158 Z"/>
-
-  <!-- EA monogram -->
-  <g fill="#4A3428">
-    <!-- E -->
-    <rect x="210" y="250" width="14" height="72" rx="1"/>
-    <rect x="210" y="250" width="44" height="14" rx="1"/>
-    <rect x="210" y="279" width="36" height="12" rx="1"/>
-    <rect x="210" y="308" width="44" height="14" rx="1"/>
-    <!-- A -->
-    <path d="M266 322 L284 250 L302 322 H288 L284 302 H276 L272 322 Z"/>
-    <rect x="276" y="286" width="16" height="10" rx="1"/>
-  </g>
+  <circle cx="256" cy="256" r="7" fill="#C9A063"/>
 </svg>

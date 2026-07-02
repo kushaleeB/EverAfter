@@ -1,4 +1,4 @@
-import { Check, X, Users, MailCheck, Paintbrush, Layers, Sparkles } from 'lucide-react';
+import { Users, MailCheck, Paintbrush, Layers, Sparkles } from 'lucide-react';
 import { LandingNavbar } from '@/components/landing/LandingNavbar';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 
@@ -6,13 +6,6 @@ const studioFeatures = [
   { icon: Paintbrush, label: 'Curated serif typography palettes' },
   { icon: Layers, label: 'Translucent vellum layering effects' },
   { icon: Sparkles, label: 'Subtle entrance animations' },
-];
-
-const platformCapabilities = [
-  { feature: 'Custom Domain Name', standard: false, premium: true },
-  { feature: 'Advanced Guest Segmentation', standard: false, premium: true },
-  { feature: 'RSVP Tracking & Insights', standard: true, premium: true },
-  { feature: 'White-Glove Design Service', standard: false, premium: true },
 ];
 
 function SectionLabel({ children }: { children: string }) {
@@ -191,78 +184,6 @@ export function FeaturesPage() {
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Platform capabilities */}
-        <section className="px-6 py-20 md:px-16 md:pb-32">
-          <div className="mx-auto max-w-4xl">
-            <h2 className="text-center font-display text-4xl tracking-tight text-[#3e2723] md:text-[2.75rem]">
-              Platform Capabilities
-            </h2>
-
-            <div className="relative mt-14 md:mt-16">
-              {/* Premium column highlight — aligned to right column */}
-              <div
-                className="pointer-events-none absolute bottom-0 right-0 top-0 w-24 rounded-2xl bg-[#e6dfd6]/90 sm:w-28 md:w-32"
-                aria-hidden
-              />
-
-              {/* Header */}
-              <div className="flex items-end border-b border-[#d7ccc8] pb-5">
-                <div className="min-w-0 flex-1 pr-4 font-display text-xl text-[#3e2723] md:text-[1.35rem]">
-                  Features
-                </div>
-                <div className="w-24 shrink-0 text-center font-display text-xl text-[#3e2723] sm:w-28 md:w-32 md:text-[1.35rem]">
-                  Standard
-                </div>
-                <div className="relative z-10 w-24 shrink-0 text-center font-display text-xl text-[#3e2723] sm:w-28 md:w-32 md:text-[1.35rem]">
-                  Premium
-                </div>
-              </div>
-
-              {/* Rows */}
-              <ul>
-                {platformCapabilities.map((row, i) => (
-                  <li
-                    key={row.feature}
-                    className={`flex items-center py-5 md:py-6 ${
-                      i < platformCapabilities.length - 1 ? 'border-b border-[#d7ccc8]' : ''
-                    }`}
-                  >
-                    <span className="min-w-0 flex-1 pr-4 font-display text-base leading-snug text-[#3e2723] md:text-lg">
-                      {row.feature}
-                    </span>
-                    <div className="flex w-24 shrink-0 justify-center sm:w-28 md:w-32">
-                      {row.standard ? (
-                        <Check
-                          className="h-[1.125rem] w-[1.125rem] text-[#3e2723]"
-                          strokeWidth={1.75}
-                        />
-                      ) : (
-                        <X
-                          className="h-[1.125rem] w-[1.125rem] text-[#3e2723]"
-                          strokeWidth={1.75}
-                        />
-                      )}
-                    </div>
-                    <div className="relative z-10 flex w-24 shrink-0 justify-center sm:w-28 md:w-32">
-                      {row.premium ? (
-                        <Check
-                          className="h-[1.125rem] w-[1.125rem] text-[#3e2723]"
-                          strokeWidth={1.75}
-                        />
-                      ) : (
-                        <X
-                          className="h-[1.125rem] w-[1.125rem] text-[#3e2723]"
-                          strokeWidth={1.75}
-                        />
-                      )}
-                    </div>
-                  </li>
-                ))}
-              </ul>
             </div>
           </div>
         </section>
